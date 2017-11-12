@@ -1,0 +1,37 @@
+{
+  "name": "redite",
+  "version": "0.0.1",
+  "description": "(Named after [Reidite](https://en.wikipedia.org/wiki/Reidite))",
+  "main": "redite.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ovyerus/redite.git"
+  },
+  "keywords": [
+    "redite",
+    "redis",
+    "database",
+    "es6",
+    "proxies",
+    "proxy"
+  ],
+  "author": "Ovyerus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ovyerus/redite/issues"
+  },
+  "homepage": "https://github.com/Ovyerus/redite#readme",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {
+    "redis": "^2.8.0"
+  }
+}
