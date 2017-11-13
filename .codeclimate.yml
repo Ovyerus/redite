@@ -1,12 +1,14 @@
+checks:
+  return-statements:
+    enabled: false
+  method-complexity:
+    enabled: false
+  method-length:
+    enabled: false
 engines:
   eslint:
     enabled: true
     config: .eslintrc
-  duplication:
-    enabled: false
-    config:
-      languages:
-      - javascript
   fixme:
       enabled: true
 ratings:
