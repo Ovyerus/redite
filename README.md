@@ -1,5 +1,6 @@
 # redite
 [![Maintainability](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/maintainability)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
+[![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)
 
 (Named after the mineral [Reidite](https://en.wikipedia.org/wiki/Reidite))  
 Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).  
