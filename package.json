@@ -1,7 +1,7 @@
 {
   "name": "redite",
   "version": "0.0.1",
-  "description": "(Named after [Reidite](https://en.wikipedia.org/wiki/Reidite))",
+  "description": "A Redis wrapper using ES6 Proxies.",
   "main": "redite.js",
   "directories": {
     "test": "test"

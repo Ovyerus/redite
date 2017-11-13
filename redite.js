@@ -182,7 +182,7 @@ class Redite {
      * Serialises a value for Redis, and determines whether to store it in a special native Redis type, or a regular value.
      * 
      * @param {*} value Value to send to Redis.
-     * @param {(String|Number)[]} stack Stack of keys. Must have at least one.
+     * @param {String[]} stack Stack of keys. Must have at least one.
      * @returns {Promise} .
      */
     resolveSetStack(value, stack=[]) {
@@ -272,8 +272,8 @@ class Redite {
     /**
      * Deletes a given key from Redis, or a property of a stored value.
      * 
-     * @param {(String|Number)} key Base key to delete.
-     * @param {(String|Number)[]} [stack] Key stack to follow and delete instead.
+     * @param {String} key Base key to delete.
+     * @param {String[]} [stack] Key stack to follow and delete instead.
      * @returns {Promise} .
      */
     resolveDeleteStack(key, stack=[]) {
@@ -294,8 +294,8 @@ class Redite {
     /**
      * Checks if a key, and optional key stack, exists in Redis.
      * 
-     * @param {(String|Number)} key Base key to check.
-     * @param {(String|Number)[]} [stack] Optional stack of keys to follow and check if they exist.
+     * @param {String} key Base key to check.
+     * @param {String[]} [stack] Optional stack of keys to follow and check if they exist.
      * @returns {Promise<Boolean>} Whether the key exists or not.
      */
     resolveHasStack(key, stack=[]) {
