@@ -19,11 +19,11 @@ function promisify(func, thisArg, ...args) {
 
 // Generates an empty tree from a list of keys.
 function genTree(stack) {
-    let ret = /^[0-9]+$/.test(stack[0]) ? [] : {};
+    let ret = !isNaN(stack[0]) ? [] : {};
     let ref = ret;
 
     stack.forEach((key, next) => {
-        ref = ref[key] = /^[0-9]+$/.test(stack[Number(next) + 1]) ? [] : {}; // Pointer abuse yay
+        ref = ref[key] = !isNaN(stack[Number(next) + 1]) ? [] : {}; // Pointer abuse yay
     });
 
     return ret;
@@ -44,8 +44,19 @@ class ChildWrapper {
 
                 // Special methods, used in place of actually performing native operations.
                 if (key === 'set') return value => parentObj.resolveSetStack(value, stack.concat(parentKey));
-                if (key === 'has') return key => parentObj.resolveHasStack(stack.shift(), stack.concat(parentKey, key));
-                if (key === 'delete') return key => parentObj.resolveDeleteStack(stack.shift(), stack.concat(parentKey, key));
+                if (key === 'has') return key => {
+                    stack.push(parentKey);
+
+                    if (key) stack.push(key);
+                    return parentObj.resolveHasStack(stack.shift(), stack);
+                };
+
+                if (key === 'delete') return key => {
+                    stack.push(parentKey);
+
+                    if (key) stack.push(key);
+                    return parentObj.resolveDeleteStack(stack.shift(), stack);
+                };
 
                 // Continues the stack with another ChildWrapper.
                 return new ChildWrapper(parentObj, key, stack.concat(parentKey));
@@ -225,9 +236,9 @@ class Redite {
                     } else {
                         return Promise.all([promisify(this._redis.hget, this._redis, stack.slice(0, 2)), 'hash']);
                     }
-                } else if (type === 'none' && stack.length) {
+                } else if (type === 'none' && stack.length > 1) {
                     // Construct a tree representing the key stack if the user tries to set it when it doesn't exist.
-                    return [genTree(stack), 'faked'];
+                    return [genTree(stack.slice(1)), 'faked'];
                 } else {
                     // Otherwise handle it as a regular value.
                     return Promise.all([promisify(this._redis.set, this._redis, stack[0], this._serialise(value)), 'finish']);
@@ -241,13 +252,11 @@ class Redite {
 
                 // Traverse the key stack and continually make `ref` point to nested values.
                 stack.slice(2, -1).forEach(key => {
-                    if (!ref.hasOwnProperty(key)) ref[key] = /^[0-9]+$/.test(key) ? [] : {};
+                    if (!ref.hasOwnProperty(key)) ref[key] = !isNaN(key)? [] : {};
                     ref = ref[key];
                 });
-                console.log(util.inspect(ref, {depth: 400}));
 
                 ref[stack.slice(-1)[0]] = value; // Set the final nested value.
-                console.log(util.inspect(ref, {depth: 400}));
 
                 if (type === 'list') {
                     return promisify(this._redis.lset, this._redis, stack[0], stack[1], this._serialise(res));
@@ -257,8 +266,7 @@ class Redite {
                     if (Array.isArray(res)) {
                         return promisify(this._redis.rpush, this._redis, [stack[0]].concat(res.map(val => this._serialise(val))));
                     } else {
-                        // Did someone say, stupidly long one-liners?
-                        console.log(util.inspect(res, {depth: 400}));
+                        // Did someone say stupidly long one-liners?
                         let arr = [].concat.apply([stack[0]], Object.entries(res).map(([name, val]) => [name, this._serialise(val)]));
 
                         return promisify(this._redis.hmset, this._redis, arr);
@@ -287,7 +295,7 @@ class Redite {
                 delete ref[stack.slice(-1)[0]];
 
                 return this.resolveSetStack(res, [key].concat(stack));
-            }).catch(reject);
+            }).then(() => resolve()).catch(reject);
         });
     }
 

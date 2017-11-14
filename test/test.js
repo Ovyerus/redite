@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* eslint-disable prefer-arrow-callback */
 
-const DB = 15;
+const DB = 15; // Moves all the testing out of a possibly used DB index, as we call FLUSHDB before each test.
 const TEST_HASH = {TEST_HASH: 'TEST HASH'};
 const TEST_LIST = ['TEST LIST'];
 
@@ -56,10 +56,10 @@ describe('Redite', function() {
 
             it('should check if a key exists', function() {
                 return wrapper.has('test').then(exists => {
-                    expect(exists).to.equal(false);
+                    expect(exists).to.be.false;
                     return promisify(client.set, client, 'test', 'existance test');
                 }).then(() => wrapper.has('test')).then(exists => {
-                    expect(exists).to.equal(true);
+                    expect(exists).to.be.true;
                 });
             });
         });
@@ -263,22 +263,22 @@ describe('ChildWrapper', function() {
             });
 
             it('should set a deeply nested object, with the first as a hash', function() {
-                return wrapper.test.foo.bar.foobar.set(TEST_LIST).then(() => {
+                return wrapper.test.foo.bar.foobar.set(TEST_HASH).then(() => {
                     return promisify(client.type, client, 'test');
                 }).then(type => {
                     expect(type).to.equal('hash');
-                    return wrapper.test.foo.bar.foobar[0].get;
+                    return wrapper.test.foo.bar.foobar.TEST_HASH.get;
                 }).then(res => {
-                    expect(res).to.equal('TEST LIST');
+                    expect(res).to.equal('TEST HASH');
                 });
             });
 
             it('should set a deeply nested array, with the first as a list', function() {
-                return wrapper.test[0][0][0][0].set(TEST_LIST).then(() => {
+                return wrapper.test[0].foo[0].bar.set(TEST_LIST).then(() => {
                     return promisify(client.type, client, 'test');
                 }).then(type => {
                     expect(type).to.equal('list');
-                    return wrapper.test[0][0][0][0][0].get;
+                    return wrapper.test[0].foo[0].bar[0].get;
                 }).then(res => {
                     expect(res).to.equal('TEST LIST');
                 });
@@ -290,10 +290,60 @@ describe('ChildWrapper', function() {
                 expect(wrapper.foo.has).to.be.a('function');
             });
 
-            it('should check if the surface key exists in a hash');
-            it('should check if the surface key exists in a list');
-            it('should check if a deeply nested key exists in a hash');
-            it('should check if a deeply nested key exists in a list');
+            it.skip('should check if the surface key exists in a hash', function() {
+                return wrapper.test.has('TEST_HASH').then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.set(TEST_HASH);
+                }).then(() => wrapper.test.has('TEST_HASH')).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            it.skip('should check if the surface key exists in a list', function() {
+                return wrapper.test.has(0).then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.set(TEST_LIST);
+                }).then(() => wrapper.test.has(0)).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            // Currently disabled due to `.set` being broken.
+            it.skip('should check if a deeply nested key exists in a hash', function() {
+                return wrapper.test.foo.bar.foobar.has('TEST_HASH').then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.foo.bar.foobar.set(TEST_HASH);
+                }).then(() => wrapper.test.foo.bar.foobar.has('TEST_HASH')).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            it.skip('should check if a deeply nested key exists in a list', function() {
+                return wrapper.test[0].foo[0].bar.has(0).then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test[0].foo[0].bar.set(TEST_LIST);
+                }).then(() => wrapper.test[0].foo[0].bar.has(0)).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            it.skip('should check the existance of the last key if one is not given to the function (hash)', function() {
+                return wrapper.test.TEST_HASH.has().then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.set(TEST_HASH);
+                }).then(() => wrapper.test.TEST_HASH.has()).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            it.skip('should check the existance of the last key if one is not given to the function (list)', function() {
+                return wrapper.test[0].has().then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.set(TEST_LIST);
+                }).then(() => wrapper.test[0].has()).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
         });
 
         describe('.delete', function() {
@@ -301,10 +351,54 @@ describe('ChildWrapper', function() {
                 expect(wrapper.foo.delete).to.be.a('function');
             });
 
-            it('should delete a surface key in a hash');
-            it('should delete a surface key in a list');
-            it('should delete a deeply nested key in a hash');
-            it('should delete a deeply nested key in a list');
+            // These are also disabled due to issues with `.set`
+            it.skip('should delete a surface key in a hash', function() {
+                return wrapper.test.foo('bar').then(() => {
+                    return wrapper.test.delete('foo');
+                }).then(() => wrapper.test.has('foo')).then(exists => {
+                    expect(exists).to.be.false;
+                });
+            });
+
+            it.skip('should delete a surface key in a list', function() {
+                return wrapper.test[0].set('bar').then(() => {
+                    return wrapper.test.delete(0);
+                }).then(() => wrapper.test.has(0)).then(exists => {
+                    expect(exists).to.be.false;
+                });
+            });
+
+            it.skip('should delete a deeply nested key in a hash', function() {
+                return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test.foo.bar.delete('TEST_HASH');
+                }).then(() => Promise.all([wrapper.test.foo.bar.has('TEST_HASH'), wrapper.test.foo.has('bar')])).then(existsArr => {
+                    expect(existsArr).to.deep.equal([false, true]);
+                });
+            });
+
+            it.skip('should delete a deeply nested key in a list', function() {
+                return wrapper.test[0].foo[0].bar.set(TEST_LIST).then(() => {
+                    return wrapper.test[0].foo[0].bar.delete(0);
+                }).then(() => Promise.all([wrapper.test[0].foo[0].bar.has(0), wrapper.test[0].foo[0].has('bar')])).then(existsArr => {
+                    expect(existsArr).to.deep.equal([false, true]);
+                });
+            });
+
+            it.skip('should delete the last key if one is not given to the function (hash)', function() {
+                return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test.foo.bar.TEST_HASH.delete();
+                }).then(() => Promise.all([wrapper.test.foo.bar.has('TEST_HASH'), wrapper.test.foo.has('bar')])).then(existsArr => {
+                    expect(existsArr).to.deep.equal([false, true]);
+                });
+            });
+
+            it.skip('should delete the last key if one is not given to the function (list)', function() {
+                return wrapper.test[0].foo[0].bar.set(TEST_LIST).then(() => {
+                    return wrapper.test[0].foo[0].bar[0].delete();
+                }).then(() => Promise.all([wrapper.test[0].foo[0].bar.has(0), wrapper.test[0].foo[0].has('bar')])).then(existsArr => {
+                    expect(existsArr).to.deep.equal([false, true]);
+                });
+            });
         });
     });
 

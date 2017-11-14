@@ -157,6 +157,4 @@ db.foo.set('Hello world!').then(() => db.exists('foo')).then(exists => {
 
 ## To-Do
  - Fix deep key setting ([#1](https://github.com/Ovyerus/redite/issues/1))
- - Write tests for `.delete` and `.has`.
- - Allow deleting and existance checking without a given key.
  - Add helper methods for arrays that edit in place in the database, or return it edited (filter, push, concat, etc.).
