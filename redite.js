@@ -4,7 +4,7 @@
  */
 
 const redis = require('redis');
-const util = require('util');
+require('./entriesPolyfill');
 
 // FIND A BETTER WAY DUMBASS
 function promisify(func, thisArg, ...args) {

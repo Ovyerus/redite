@@ -11,7 +11,6 @@ Note that this library is not yet finished and still a bit buggy, so it is not a
  - No synchronous capabilities.
  - Allows access to internal objects such as the internal Redis connection.
  - Minimal dependencies (only relies on node_redis).
- - Requires Node 8+ (due to use of `Object.entries`)
 
 ## Installation
 ```
