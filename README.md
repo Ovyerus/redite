@@ -1,5 +1,6 @@
 # redite
 [![Maintainability](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/maintainability)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/test_coverage)](https://codeclimate.com/github/Ovyerus/redite/test_coverage)
 [![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)
 
 (Named after the mineral [Reidite](https://en.wikipedia.org/wiki/Reidite))  
