@@ -44,7 +44,7 @@ class ChildWrapper {
 
                 // Special methods, used in place of actually performing native operations.
                 if (key === 'set') return value => parentObj.resolveSetStack(value, stack.concat(parentKey));
-                if (key === 'has') return key => {
+                if (key === 'has' || key === 'exists') return key => {
                     stack.push(parentKey);
 
                     if (key) stack.push(key);
@@ -65,7 +65,7 @@ class ChildWrapper {
             /*
                Throw errors for other methods, as there are special keys that are used for these instead, since this is entirely async.
                I may find a way to handle these using a synchronous connection to Redis, if the end user so wishes to, but this will
-               have to be done using an option, so that it does not get accidentally done by someone who doesn't want this to block at all.
+               have to be done using an option so that it does not get accidentally done by someone who doesn't want this to block at all.
             */
             set() {
                 throw new Error('Child objects do not support setting (foo.bar = baz).');

@@ -21,7 +21,7 @@ npm install redite
 ```js
 const Redite = require('redite');
 const db = new Redite(); // If not passed a Redis connection to piggyback off of, it'll make its own.
-                             // You can also pass a `url` parameter to the options object to connect using a Redis URL.
+                         // You can also pass a `url` parameter to the options object to connect using a Redis URL.
 
 db.users[0].set({
     username: 'Ovyerus',
@@ -126,13 +126,14 @@ db.foo[0].bar[1].set('What a lovely day!').then(() => {
 
 #### **Other Methods**
 The library also has `.has` and `.delete` which work in the same fashion as `.set`, but check for existance or delete the tree, respectively.  
-If a key is not given to these methods, they will be applied to the last key before them.
+If a key is not given to these methods, they will be applied to the last key before them.  
+There is also `.exists` which is an alias for `.has`, which makes more sense when not passing a key to it.
 
 ```js
 const db = new Redite();
 
 db.foo.bar.fizz.buzz.set('Hello world!').then(() => {
-    return db.foo.exists('bar');
+    return db.foo.has('bar');
 }).then(exists => {
     console.log(exists); // true
     return db.foo.bar.delete('fizz');
@@ -146,10 +147,10 @@ db.foo.bar.fizz.buzz.set('Hello world!').then(() => {
 ```js
 const db = new Redite();
 
-db.foo.set('Hello world!').then(() => db.exists('foo')).then(exists => {
+db.foo.set('Hello world!').then(() => db.has('foo')).then(exists => {
     console.log(exists); // true
     return db.delete('foo');
-}).then(() => db.exists('foo')).then(exists => {
+}).then(() => db.has('foo')).then(exists => {
     console.log(exists); // false
 }).catch(console.error);
 ```
