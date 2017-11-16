@@ -290,7 +290,7 @@ describe('ChildWrapper', function() {
                 expect(wrapper.foo.has).to.be.a('function');
             });
 
-            it.skip('should check if the surface key exists in a hash', function() {
+            it('should check if the surface key exists in a hash', function() {
                 return wrapper.test.has('TEST_HASH').then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_HASH);
@@ -299,7 +299,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should check if the surface key exists in a list', function() {
+            it('should check if the surface key exists in a list', function() {
                 return wrapper.test.has(0).then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_LIST);
@@ -309,7 +309,7 @@ describe('ChildWrapper', function() {
             });
 
             // Currently disabled due to `.set` being broken.
-            it.skip('should check if a deeply nested key exists in a hash', function() {
+            it('should check if a deeply nested key exists in a hash', function() {
                 return wrapper.test.foo.bar.foobar.has('TEST_HASH').then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.foo.bar.foobar.set(TEST_HASH);
@@ -318,7 +318,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should check if a deeply nested key exists in a list', function() {
+            it('should check if a deeply nested key exists in a list', function() {
                 return wrapper.test[0].foo[0].bar.has(0).then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test[0].foo[0].bar.set(TEST_LIST);
@@ -327,7 +327,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should check the existance of the last key if one is not given to the function (hash)', function() {
+            it('should check the existance of the last key if one is not given to the function (hash)', function() {
                 return wrapper.test.TEST_HASH.has().then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_HASH);
@@ -336,7 +336,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should check the existance of the last key if one is not given to the function (list)', function() {
+            it('should check the existance of the last key if one is not given to the function (list)', function() {
                 return wrapper.test[0].has().then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_LIST);
@@ -352,7 +352,7 @@ describe('ChildWrapper', function() {
             });
 
             // These are also disabled due to issues with `.set`
-            it.skip('should delete a surface key in a hash', function() {
+            it('should delete a surface key in a hash', function() {
                 return wrapper.test.foo('bar').then(() => {
                     return wrapper.test.delete('foo');
                 }).then(() => wrapper.test.has('foo')).then(exists => {
@@ -360,7 +360,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should delete a surface key in a list', function() {
+            it('should delete a surface key in a list', function() {
                 return wrapper.test[0].set('bar').then(() => {
                     return wrapper.test.delete(0);
                 }).then(() => wrapper.test.has(0)).then(exists => {
@@ -368,7 +368,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should delete a deeply nested key in a hash', function() {
+            it('should delete a deeply nested key in a hash', function() {
                 return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
                     return wrapper.test.foo.bar.delete('TEST_HASH');
                 }).then(() => Promise.all([wrapper.test.foo.bar.has('TEST_HASH'), wrapper.test.foo.has('bar')])).then(existsArr => {
@@ -376,7 +376,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should delete a deeply nested key in a list', function() {
+            it('should delete a deeply nested key in a list', function() {
                 return wrapper.test[0].foo[0].bar.set(TEST_LIST).then(() => {
                     return wrapper.test[0].foo[0].bar.delete(0);
                 }).then(() => Promise.all([wrapper.test[0].foo[0].bar.has(0), wrapper.test[0].foo[0].has('bar')])).then(existsArr => {
@@ -384,7 +384,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should delete the last key if one is not given to the function (hash)', function() {
+            it('should delete the last key if one is not given to the function (hash)', function() {
                 return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
                     return wrapper.test.foo.bar.TEST_HASH.delete();
                 }).then(() => Promise.all([wrapper.test.foo.bar.has('TEST_HASH'), wrapper.test.foo.has('bar')])).then(existsArr => {
@@ -392,7 +392,7 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it.skip('should delete the last key if one is not given to the function (list)', function() {
+            it('should delete the last key if one is not given to the function (list)', function() {
                 return wrapper.test[0].foo[0].bar.set(TEST_LIST).then(() => {
                     return wrapper.test[0].foo[0].bar[0].delete();
                 }).then(() => Promise.all([wrapper.test[0].foo[0].bar.has(0), wrapper.test[0].foo[0].has('bar')])).then(existsArr => {

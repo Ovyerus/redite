@@ -157,5 +157,4 @@ db.foo.set('Hello world!').then(() => db.has('foo')).then(exists => {
 ```
 
 ## To-Do
- - Fix deep key setting ([#1](https://github.com/Ovyerus/redite/issues/1))
  - Add helper methods for arrays that edit in place in the database, or return it edited (filter, push, concat, etc.).

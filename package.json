@@ -1,6 +1,6 @@
 {
   "name": "redite",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Redis wrapper using ES6 Proxies.",
   "main": "redite.js",
   "directories": {

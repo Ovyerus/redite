@@ -19,11 +19,11 @@ function promisify(func, thisArg, ...args) {
 
 // Generates an empty tree from a list of keys.
 function genTree(stack) {
-    let ret = !isNaN(stack[0]) ? [] : {};
+    let ret = isNaN(stack[0]) ? {} : [];
     let ref = ret;
 
     stack.forEach((key, next) => {
-        ref = ref[key] = !isNaN(stack[Number(next) + 1]) ? [] : {}; // Pointer abuse yay
+        ref = ref[key] = isNaN(stack[Number(next) + 1]) ? {} : []; // Pointer abuse yay
     });
 
     return ret;
@@ -251,9 +251,9 @@ class Redite {
                 let ref = res; // Makes a reference to `res`.
 
                 // Traverse the key stack and continually make `ref` point to nested values.
-                stack.slice(2, -1).forEach(key => {
-                    if (!ref.hasOwnProperty(key)) ref[key] = !isNaN(key)? [] : {};
-                    ref = ref[key];
+                stack.slice(type === 'faked' ? 1 : 2, -1).forEach((key, next) => {
+                    if (!ref.hasOwnProperty(key)) ref = ref[key] = isNaN(stack[Number(next) + 1]) ? {} : [];
+                    else ref = ref[key];
                 });
 
                 ref[stack.slice(-1)[0]] = value; // Set the final nested value.
@@ -321,7 +321,7 @@ class Redite {
                     return Promise.all([promisify(this._redis.get, this._redis, key), 'normal']);
                 }
             }).then(res => {
-                if (res[1] === 'finish') return res[0];
+                if (res[1] === 'finish') return !!res[0]; // Coerce to boolean since node_redis doesnt.
 
                 res = this._parse(res);
 
@@ -331,7 +331,7 @@ class Redite {
                 }
 
                 return true;
-            }).then(val => resolve(!!val)).catch(reject);
+            }).then(resolve).catch(reject);
         });
     }
 }
