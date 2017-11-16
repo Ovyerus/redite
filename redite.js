@@ -288,14 +288,15 @@ class Redite {
         return new Promise((resolve, reject) => {
             if (!stack || !stack.length) return resolve(promisify(this._redis.del, this._redis, key).then(() => {}));
 
-            this.resolveStack(key, [stack.slice[0]]).then(res => {
-                let ref = res;
-
-                stack.slice(0, -1).forEach(key => ref = ref[key]);
-                delete ref[stack.slice(-1)[0]];
-
-                return this.resolveSetStack(res, [key].concat(stack));
-            }).then(() => resolve()).catch(reject);
+            promisify(this._redis.type, this._redis, key).then(type => {
+                if (type === 'hash') {
+                    // Handle hashes
+                } else if (type === 'list') {
+                    // Handle lists
+                } else {
+                    // Other
+                }
+            });
         });
     }
 
@@ -308,7 +309,7 @@ class Redite {
      */
     resolveHasStack(key, stack=[]) {
         return new Promise((resolve, reject) => {
-            if (!stack || !stack.length) return resolve(promisify(this._redis.exists, this._redis, key).then(() => {}));
+            if (!stack || !stack.length) return resolve(promisify(this._redis.exists, this._redis, key).then(res => !!res));
 
             promisify(this._redis.type, this._redis, key).then(type => {
                 if (type === 'list') {
@@ -322,8 +323,9 @@ class Redite {
                 }
             }).then(res => {
                 if (res[1] === 'finish') return !!res[0]; // Coerce to boolean since node_redis doesnt.
+                if (res[0] == null) return false;
 
-                res = this._parse(res);
+                res = this._parse(res[0]);
 
                 for (let part of stack) {
                     if (!res.hasOwnProperty(part)) return false;
