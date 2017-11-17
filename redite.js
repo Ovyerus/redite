@@ -208,7 +208,7 @@ class Redite {
                 return resolve(promisify(this._redis.del, this._redis, stack[0]).then(() => {
                     return promisify(this._redis.rpush, this._redis, stack.concat(value.map(v => this._serialise(v))));
                 }));
-            } else if (Array.isArray && !value.length) {
+            } else if (Array.isArray(value) && !value.length && stack.length === 1) {
                 return resolve();
             }
 
