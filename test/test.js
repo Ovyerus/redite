@@ -308,7 +308,6 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            // Currently disabled due to `.set` being broken.
             it('should check if a deeply nested key exists in a hash', function() {
                 return wrapper.test.foo.bar.foobar.has('TEST_HASH').then(exists => {
                     expect(exists).to.be.false;
@@ -351,9 +350,8 @@ describe('ChildWrapper', function() {
                 expect(wrapper.foo.delete).to.be.a('function');
             });
 
-            // These are also disabled due to issues with `.set`
             it('should delete a surface key in a hash', function() {
-                return wrapper.test.foo('bar').then(() => {
+                return wrapper.test.foo.set('bar').then(() => {
                     return wrapper.test.delete('foo');
                 }).then(() => wrapper.test.has('foo')).then(exists => {
                     expect(exists).to.be.false;

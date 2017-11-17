@@ -4,14 +4,14 @@
 [![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)
 
 (Named after the mineral [Reidite](https://en.wikipedia.org/wiki/Reidite))  
-Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).  
-Note that this library is not yet finished and still a bit buggy, so it is not advised to use this as of right now.
+Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
 
 ## Differences to Rebridge
  - Uses native Redis data types instead of a single hash (ie. lists for arrays, hashs for objects).
  - No synchronous capabilities.
  - Allows access to internal objects such as the internal Redis connection.
  - Minimal dependencies (only relies on node_redis).
+ - Automatically creates an object tree when setting.
 
 ## Installation
 ```
@@ -56,23 +56,25 @@ client.hset('users', 'ovyerus', 'Ovyerus@users.noreply.github.com', err => {
 
 
 #### **Properties**
-| Name       | Type              | Description                                                |
-| ---------- | ----------------- | ---------------------------------------------------------- |
-| _redis     | redis.RedisClient | The Redis connection that gets piggybacked by the wrapper. |
-| _serialise | Function          | Function used to serialise data for Redis.                 |
-| _parse     | Function          | Function used to parse data from Redis.                    |
+| Name          | Type              | Description                                                       |
+| ------------- | ----------------- | ----------------------------------------------------------------- |
+| _redis        | redis.RedisClient | The Redis connection that gets piggybacked by the wrapper.        |
+| _serialise    | Function          | Function used to serialise data for Redis.                        |
+| _parse        | Function          | Function used to parse data from Redis.                           |
+| _deleteString | String            | String used as a temporary placeholder when deleting list values. |
 
 
 #### **Constructor**  
 `new Redite([options])`
 
-| Name              | Type              | Default                                  | Description                                                                                               |
-| ----------------- | ----------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| options.client    | redis.RedisClient | `redis.createClient({url: options.url})` | The Redis connection to piggyback off of.                                                                 |
-| options.url       | String            |                                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.            |
-| options.serialise | Function          | `JSON.stringify`                         | Function that takes in a JS object and returns a string that can be sent to Redis.                        |
-| options.parse     | Function          | `JSON.parse`                             | Function that takes in a string and returns the JS object that it represents.                             |
-| options.dontUnref | Boolean           | `false`                                  | If false, `unref()` will be called on the Redis connection, allowing Node to close if nothing is running. |
+| Name                 | Type              | Default                                  | Description                                                                                               |
+| -------------------- | ----------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| options.client       | redis.RedisClient | `redis.createClient({url: options.url})` | The Redis connection to piggyback off of.                                                                 |
+| options.url          | String            |                                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.            |
+| options.serialise    | Function          | `JSON.stringify`                         | Function that takes in a JS object and returns a string that can be sent to Redis.                        |
+| options.parse        | Function          | `JSON.parse`                             | Function that takes in a string and returns the JS object that it represents.                             |
+| options.deleteString | String            | `@__DELETED__@`                          | String to use as a temporary placeholder when deleting root indexes in a list.                            |
+| options.dontUnref    | Boolean           | `false`                                  | If false, `unref()` will be called on the Redis connection, allowing Node to close if nothing is running. |
 
 
 #### **Accessing Objects**

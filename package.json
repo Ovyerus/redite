@@ -1,13 +1,14 @@
 {
   "name": "redite",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A Redis wrapper using ES6 Proxies.",
   "main": "redite.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "eslint **/*.js || ./node_modules/.bin/eslint **/*.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,8 @@
   "homepage": "https://github.com/Ovyerus/redite#readme",
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "eslint": "^4.11.0"
   },
   "dependencies": {
     "redis": "^2.8.0"

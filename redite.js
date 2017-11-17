@@ -47,14 +47,14 @@ class ChildWrapper {
                 if (key === 'has' || key === 'exists') return key => {
                     stack.push(parentKey);
 
-                    if (key) stack.push(key);
+                    if (key != null) stack.push(key);
                     return parentObj.resolveHasStack(stack.shift(), stack);
                 };
 
                 if (key === 'delete') return key => {
                     stack.push(parentKey);
 
-                    if (key) stack.push(key);
+                    if (key != null) stack.push(key);
                     return parentObj.resolveDeleteStack(stack.shift(), stack);
                 };
 
@@ -92,6 +92,7 @@ class ChildWrapper {
  * @prop {redis.RedisClient} _redis The Redis connection that is getting wrapped by the client.
  * @prop {Function} _serialise Serialisation function used to turn objects into strings to store into Redis.
  * @prop {Function} _parse Function used to parse strings returned from Redis, into JS objects.
+ * @prop {String} _deletedString String used when deleting values from lists.
  */
 class Redite {
     /**
@@ -103,12 +104,14 @@ class Redite {
      * @param {String} [options.url] Redis URL to connect to. This will be used if a client is not given.
      * @param {Function} [options.serialise=JSON.stringify] Function to serialise data to store into Redis.
      * @param {Function} [options.parse=JSON.parse] Function to parse data returned from Redis, into JS objects.
+     * @param {String} [options.deletedString='@__DELETED__@'] String to use when deleting values from lists.
      * @param {Boolean} [options.dontUnref=true] Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.
      */
     constructor(options={}) {
         this._redis = options.client || redis.createClient({url: options.url});
         this._serialise = options.serialise || JSON.stringify;
         this._parse = options.parse || JSON.parse;
+        this._deletedString = options.deletedString || '@__DELETED__@';
 
         if (!options.dontUnref) this._redis.unref(); // Lets Node if nothing is happening.
 
@@ -289,14 +292,34 @@ class Redite {
             if (!stack || !stack.length) return resolve(promisify(this._redis.del, this._redis, key).then(() => {}));
 
             promisify(this._redis.type, this._redis, key).then(type => {
-                if (type === 'hash') {
+                if (type === 'hash' && stack.length === 1) {
                     // Handle hashes
-                } else if (type === 'list') {
+                    return Promise.all([promisify(this._redis.hdel, this._redis, key, stack[0]), 'finish']);
+                } else if (type === 'list' && stack.length === 1) {
                     // Handle lists
+                    let p = promisify(this._redis.lset, this._redis, key, stack[0], this._deletedString).then(() => {
+                        return promisify(this._redis.lrem, this._redis, key, 0, this._deletedString);
+                    });
+
+                    return Promise.all([p, 'finish']);
+                } else if (type === 'none') {
+                    // Doesn't exist
+                    return [null, 'finish'];
                 } else {
-                    // Other
+                    // Rest
+                    return Promise.all([this.resolveStack(key, [stack[0]]), 'continue']);
                 }
-            });
+            }).then(res => {
+                if (res[1] === 'finish') return;
+
+                res = res[0];
+                let ref = stack.slice(1, -1).reduce((obj, key) => obj[key], res);
+
+                if (Array.isArray(ref)) ref.splice(stack.slice(-1), 1);
+                else delete ref[stack.slice(-1)[0]];
+
+                return this.resolveSetStack(res, [key, stack[0]]);
+            }).then(resolve).catch(reject);
         });
     }
 
