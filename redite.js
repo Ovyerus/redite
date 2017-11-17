@@ -9,9 +9,8 @@ require('./entriesPolyfill');
 // FIND A BETTER WAY DUMBASS
 function promisify(func, thisArg, ...args) {
     return new Promise((resolve, reject) => { 
-        func.apply(thisArg, [...args, (err, ...res) => {
+        func.apply(thisArg, [...args, (err, res) => {
             if (err) reject(err);
-            else if (res.length <= 1) resolve(res[0]);
             else resolve(res);
         }]);
     });
@@ -205,10 +204,12 @@ class Redite {
 
             // Handle arrays as native Redis lists.
             // If there's only one key in the stack, replace the entire list in the database with the new one.
-            if (Array.isArray(value) && stack.length === 1) {
+            if (Array.isArray(value) && value.length && stack.length === 1) {
                 return resolve(promisify(this._redis.del, this._redis, stack[0]).then(() => {
                     return promisify(this._redis.rpush, this._redis, stack.concat(value.map(v => this._serialise(v))));
                 }));
+            } else if (Array.isArray && !value.length) {
+                return resolve();
             }
 
             // Handle objects as native Redis hashmaps.
