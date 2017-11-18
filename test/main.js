@@ -38,6 +38,7 @@ describe('Redite', function() {
             expect(wrapper._redis).to.be.instanceof(redis.RedisClient);
             expect(wrapper._serialise).to.be.a('function');
             expect(wrapper._parse).to.be.a('function');
+            expect(wrapper._deletedString).to.be.a('string');
         });
 
         it('should throw an error for `.set`', function() {
@@ -283,6 +284,94 @@ describe('ChildWrapper', function() {
                     expect(res).to.equal('TEST LIST');
                 });
             });
+
+            it('should not set anything if given an empty object', function() {
+                return wrapper.test.set({}).then(() => {
+                    return promisify(client.exists, client, 'test');
+                }).then(exists => {
+                    expect(exists).to.be.not.ok;
+                });
+            });
+
+            it('should not set anything if given an empty array', function() {
+                return wrapper.test.set([]).then(() => {
+                    return promisify(client.exists, client, 'test');
+                }).then(exists => {
+                    expect(exists).to.be.not.ok;
+                });
+            });
+
+            it('should edit an object tree without overriding any parts of it', function() {
+                return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test.foo.TEST_HASH.set('TEST HASH');
+                }).then(() => wrapper.test.get).then(res => {
+                    expect(res).to.deep.equal({
+                        foo: {
+                            bar: {
+                                TEST_HASH: 'TEST HASH'
+                            },
+                            TEST_HASH: 'TEST HASH'
+                        }
+                    });
+                });
+            });
+
+            it('should edit an item in a list without overriding any parts of it', function() {
+                return wrapper.test[0].foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test[0].foo.TEST_HASH.set('TEST HASH');
+                }).then(() => wrapper.test[0].get).then(res => {
+                    expect(res).to.deep.equal({
+                        foo: {
+                            bar: {
+                                TEST_HASH: 'TEST HASH'
+                            },
+                            TEST_HASH: 'TEST HASH'
+                        }
+                    });
+                });
+            });
+
+            it('should edit an object tree and generate a tree along the way, without overriding any original parts', function() {
+                return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test.foo.fuzz[0].buzz.set(TEST_HASH);
+                }).then(() => wrapper.test.get).then(res => {
+                    expect(res).to.deep.equal({
+                        foo: {
+                            bar: {
+                                TEST_HASH: 'TEST HASH'
+                            },
+                            fuzz: [
+                                {
+                                    buzz: {
+                                        TEST_HASH: 'TEST HASH'
+                                    }
+                                }
+                            ]
+                        }
+                    });
+                });
+            });
+
+            it('should edit an item in a list and generate a tree along the way, without overriding any original parts', function() {
+                return wrapper.test[0].foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test[0].foo.fuzz[0].buzz.set(TEST_HASH);
+                }).then(() => wrapper.test[0].get).then(res => {
+                    expect(res).to.deep.equal({
+                        foo: {
+                            bar: {
+                                TEST_HASH: 'TEST HASH'
+                            },
+                            fuzz: [
+                                {
+                                    buzz: {
+                                        TEST_HASH: 'TEST HASH'
+                                    }
+                                }
+                            ]
+                        }
+                    })
+                });
+            });
         });
 
         describe('.has', function() {
@@ -327,19 +416,28 @@ describe('ChildWrapper', function() {
             });
 
             it('should check the existance of the last key if one is not given to the function (hash)', function() {
-                return wrapper.test.TEST_HASH.has().then(exists => {
+                return wrapper.test.TEST_HASH.exists().then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_HASH);
-                }).then(() => wrapper.test.TEST_HASH.has()).then(exists => {
+                }).then(() => wrapper.test.TEST_HASH.exists()).then(exists => {
                     expect(exists).to.be.true;
                 });
             });
 
             it('should check the existance of the last key if one is not given to the function (list)', function() {
-                return wrapper.test[0].has().then(exists => {
+                return wrapper.test[0].exists().then(exists => {
                     expect(exists).to.be.false;
                     return wrapper.test.set(TEST_LIST);
-                }).then(() => wrapper.test[0].has()).then(exists => {
+                }).then(() => wrapper.test[0].exists()).then(exists => {
+                    expect(exists).to.be.true;
+                });
+            });
+
+            it('should check the existance of an object directly if only given one key', function() {
+                return wrapper.test.exists().then(exists => {
+                    expect(exists).to.be.false;
+                    return wrapper.test.set(TEST_HASH);
+                }).then(() => wrapper.test.exists()).then(exists => {
                     expect(exists).to.be.true;
                 });
             });
@@ -396,6 +494,18 @@ describe('ChildWrapper', function() {
                 }).then(() => Promise.all([wrapper.test[0].foo[0].bar.has(0), wrapper.test[0].foo[0].has('bar')])).then(existsArr => {
                     expect(existsArr).to.deep.equal([false, true]);
                 });
+            });
+
+            it('should delete the whole object if ran on only one key', function() {
+                return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
+                    return wrapper.test.delete();
+                }).then(() => wrapper.has('test')).then(exists => {
+                    expect(exists).to.be.false;
+                });
+            });
+
+            it("shouldn't care if it deletes something that doesn't exist", function() {
+                return wrapper.test.foo.delete();
             });
         });
     });

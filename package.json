@@ -1,14 +1,14 @@
 {
   "name": "redite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A Redis wrapper using ES6 Proxies.",
   "main": "redite.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "nyc mocha",
-    "lint": "eslint **/*.js || ./node_modules/.bin/eslint **/*.js"
+    "test": "nyc mocha \"./test/**/!(unrefTest).js\"",
+    "lint": "eslint **/*.js"
   },
   "repository": {
     "type": "git",
@@ -42,7 +42,8 @@
       "lcov"
     ],
     "exclude": [
-      "entriesPolyfill.js"
+      "entriesPolyfill.js",
+      "test/"
     ]
   }
 }

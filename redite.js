@@ -10,6 +10,7 @@ require('./entriesPolyfill');
 function promisify(func, thisArg, ...args) {
     return new Promise((resolve, reject) => { 
         func.apply(thisArg, [...args, (err, res) => {
+            /* istanbul ignore next */
             if (err) reject(err);
             else resolve(res);
         }]);
@@ -28,6 +29,9 @@ function genTree(stack) {
     return ret;
 }
 
+/**
+ * Just an intermediate object which stores a key stack.
+ */
 class ChildWrapper {
     constructor(parentObj, parentKey, stack=[]) {
         return new Proxy(this, {
@@ -112,7 +116,9 @@ class Redite {
         this._parse = options.parse || JSON.parse;
         this._deletedString = options.deletedString || '@__DELETED__@';
 
-        if (!options.dontUnref) this._redis.unref(); // Lets Node if nothing is happening.
+        // THIS DOES GET TESTED YOU DUMBASS
+        /* istanbul ignore next */
+        if (!options.dontUnref) this._redis.unref(); // Lets Node exit if nothing is happening.
 
         /*
            According to this Stack Overflow post (https://stackoverflow.com/a/40714458/8778928), this is really the only way to "extend" a proxy,
@@ -128,7 +134,7 @@ class Redite {
                 if (key === 'delete') return key => promisify(obj._redis.del, obj._redis, key).then(() => {});
 
                 // Continue the chain with a child object.
-                return new ChildWrapper(obj, key, []);
+                return new ChildWrapper(obj, key);
             },
 
             /*
@@ -228,7 +234,7 @@ class Redite {
             promisify(this._redis.type, this._redis, stack[0]).then(type => {
                 if (type === 'list') {
                     // If the given base key is a list, handle it properly.
-                    if (stack.length === 2 || (stack.length >= 2 && /^[0-9]+$/.test(stack[1]))) {
+                    if (stack.length === 2) {
                         return Promise.all([promisify(this._redis.lset, this._redis, stack.slice(0, 2).concat(this._serialise(value))), 'finish']);
                     } else {
                         return Promise.all([promisify(this._redis.lindex, this._redis, stack.slice(0, 2)), 'list']);
@@ -251,14 +257,18 @@ class Redite {
                 if (res[1] === 'finish') return;
 
                 let type = res[1];
-                res = res[1] !== 'faked' ? (this._parse(res[0]) || res[1] === 'list' ? [] : {}) : res[0];
+                res = type !== 'faked' ? this._parse(res[0]) : res[0];
                 let ref = res; // Makes a reference to `res`.
+                let slice = stack.slice(type === 'faked' ? 1 : 2, -1);
 
                 // Traverse the key stack and continually make `ref` point to nested values.
-                stack.slice(type === 'faked' ? 1 : 2, -1).forEach((key, next) => {
-                    if (!ref.hasOwnProperty(key)) ref = ref[key] = isNaN(stack[Number(next) + 1]) ? {} : [];
+                for (let i = 0; i < slice.length; i++) {
+                    let key = slice[i];
+                    let next = slice[i + 1];
+
+                    if (!ref.hasOwnProperty(key)) ref = ref[key] = isNaN(next) ? {} : [];
                     else ref = ref[key];
-                });
+                }
 
                 ref[stack.slice(-1)[0]] = value; // Set the final nested value.
 
