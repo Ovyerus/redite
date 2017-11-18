@@ -1,2 +1,7 @@
+# Node stuff
 node_modules/
 package-lock.json
+
+# Coverage results
+coverage
+.nyc_output
