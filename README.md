@@ -12,6 +12,7 @@ Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies
  - Allows access to internal objects such as the internal Redis connection.
  - Minimal dependencies (only relies on node_redis).
  - Automatically creates an object tree when setting.
+ - Array helper methods which can mutate the array in the database.
 
 ## Installation
 ```
@@ -157,6 +158,3 @@ db.foo.set('Hello world!').then(() => db.has('foo')).then(exists => {
     console.log(exists); // false
 }).catch(console.error);
 ```
-
-## To-Do
- - Add helper methods for arrays that edit in place in the database, or return it edited (filter, push, concat, etc.).

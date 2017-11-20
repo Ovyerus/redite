@@ -1,13 +1,13 @@
 {
   "name": "redite",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "A Redis wrapper using ES6 Proxies.",
   "main": "redite.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "nyc mocha \"./test/**/!(unrefTest).js\"",
+    "test": "nyc mocha",
     "lint": "eslint **/*.js"
   },
   "repository": {

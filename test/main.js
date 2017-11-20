@@ -2,8 +2,9 @@
 /* eslint-disable prefer-arrow-callback */
 
 const DB = 15; // Moves all the testing out of a possibly used DB index, as we call FLUSHDB before each test.
-const TEST_HASH = {TEST_HASH: 'TEST HASH'};
-const TEST_LIST = ['TEST LIST'];
+const TEST_VAL = 'TEST';
+const TEST_HASH = {TEST_HASH: TEST_VAL};
+const TEST_LIST = [TEST_VAL];
 
 const chai = require('chai');
 const {expect} = chai;
@@ -164,7 +165,7 @@ describe('ChildWrapper', function() {
                     return promisify(client.hset, client, 'test', 'foo', JSON.stringify(TEST_HASH)).then(() => {
                         return wrapper.test.foo.TEST_HASH.get;
                     }).then(res => {
-                        expect(res).to.equal('TEST HASH');
+                        expect(res).to.equal(TEST_VAL);
                     });
                 });
 
@@ -172,7 +173,7 @@ describe('ChildWrapper', function() {
                     return promisify(client.hset, client, 'test', 'foo', JSON.stringify({bar: {baz: {foobar: TEST_HASH}}})).then(() => {
                         return wrapper.test.foo.bar.baz.foobar.TEST_HASH.get;
                     }).then(res => {
-                        expect(res).to.equal('TEST HASH');
+                        expect(res).to.equal(TEST_VAL);
                     });
                 });
 
@@ -203,7 +204,7 @@ describe('ChildWrapper', function() {
                     return promisify(client.rpush, client, 'test', JSON.stringify(TEST_HASH)).then(() => {
                         return wrapper.test[0].TEST_HASH.get;
                     }).then(res => {
-                        expect(res).to.equal('TEST HASH');
+                        expect(res).to.equal(TEST_VAL);
                     });
                 });
 
@@ -211,7 +212,7 @@ describe('ChildWrapper', function() {
                     return promisify(client.rpush, client, 'test', JSON.stringify({foo: {bar: {baz: {foobar: TEST_HASH}}}})).then(() => {
                         return wrapper.test[0].foo.bar.baz.foobar.TEST_HASH.get;
                     }).then(res => {
-                        expect(res).to.equal('TEST HASH');
+                        expect(res).to.equal(TEST_VAL);
                     });
                 });
 
@@ -248,7 +249,7 @@ describe('ChildWrapper', function() {
                     expect(type).to.equal('hash');
                     return wrapper.test.TEST_HASH.get;
                 }).then(res => {
-                    expect(res).to.equal('TEST HASH');
+                    expect(res).to.equal(TEST_VAL);
                 });
             });
 
@@ -259,7 +260,7 @@ describe('ChildWrapper', function() {
                     expect(type).to.equal('list');
                     return wrapper.test[0].get;
                 }).then(res => {
-                    expect(res).to.equal('TEST LIST');
+                    expect(res).to.equal(TEST_VAL);
                 });
             });
 
@@ -270,7 +271,7 @@ describe('ChildWrapper', function() {
                     expect(type).to.equal('hash');
                     return wrapper.test.foo.bar.foobar.TEST_HASH.get;
                 }).then(res => {
-                    expect(res).to.equal('TEST HASH');
+                    expect(res).to.equal(TEST_VAL);
                 });
             });
 
@@ -281,7 +282,7 @@ describe('ChildWrapper', function() {
                     expect(type).to.equal('list');
                     return wrapper.test[0].foo[0].bar[0].get;
                 }).then(res => {
-                    expect(res).to.equal('TEST LIST');
+                    expect(res).to.equal(TEST_VAL);
                 });
             });
 
@@ -303,14 +304,14 @@ describe('ChildWrapper', function() {
 
             it('should edit an object tree without overriding any parts of it', function() {
                 return wrapper.test.foo.bar.set(TEST_HASH).then(() => {
-                    return wrapper.test.foo.TEST_HASH.set('TEST HASH');
+                    return wrapper.test.foo.TEST_HASH.set(TEST_VAL);
                 }).then(() => wrapper.test.get).then(res => {
                     expect(res).to.deep.equal({
                         foo: {
                             bar: {
-                                TEST_HASH: 'TEST HASH'
+                                TEST_HASH: TEST_VAL
                             },
-                            TEST_HASH: 'TEST HASH'
+                            TEST_HASH: TEST_VAL
                         }
                     });
                 });
@@ -318,14 +319,14 @@ describe('ChildWrapper', function() {
 
             it('should edit an item in a list without overriding any parts of it', function() {
                 return wrapper.test[0].foo.bar.set(TEST_HASH).then(() => {
-                    return wrapper.test[0].foo.TEST_HASH.set('TEST HASH');
+                    return wrapper.test[0].foo.TEST_HASH.set(TEST_VAL);
                 }).then(() => wrapper.test[0].get).then(res => {
                     expect(res).to.deep.equal({
                         foo: {
                             bar: {
-                                TEST_HASH: 'TEST HASH'
+                                TEST_HASH: TEST_VAL
                             },
-                            TEST_HASH: 'TEST HASH'
+                            TEST_HASH: TEST_VAL
                         }
                     });
                 });
@@ -338,12 +339,12 @@ describe('ChildWrapper', function() {
                     expect(res).to.deep.equal({
                         foo: {
                             bar: {
-                                TEST_HASH: 'TEST HASH'
+                                TEST_HASH: TEST_VAL
                             },
                             fuzz: [
                                 {
                                     buzz: {
-                                        TEST_HASH: 'TEST HASH'
+                                        TEST_HASH: TEST_VAL
                                     }
                                 }
                             ]
@@ -359,17 +360,17 @@ describe('ChildWrapper', function() {
                     expect(res).to.deep.equal({
                         foo: {
                             bar: {
-                                TEST_HASH: 'TEST HASH'
+                                TEST_HASH: TEST_VAL
                             },
                             fuzz: [
                                 {
                                     buzz: {
-                                        TEST_HASH: 'TEST HASH'
+                                        TEST_HASH: TEST_VAL
                                     }
                                 }
                             ]
                         }
-                    })
+                    });
                 });
             });
         });

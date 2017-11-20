@@ -1,15 +1,27 @@
 /* eslint-env mocha */
 /* eslint-disable prefer-arrow-callback */
 
-const URL = 'redis://127.0.0.1/15'; // Moves all the testing out of a possibly used DB index, as we call FLUSHDB before each test.
-const TEST_HASH = {TEST_HASH: 'TEST HASH'};
+const DB = 15; // Moves all the testing out of a possibly used DB index, as we call FLUSHDB before each test.
+const TEST_HASH = {TEST_HASH: 'TEST'};
 
 const chai = require('chai');
 const {expect} = chai;
 
 const Redite = require('../');
+const redis = require('redis');
 const {fork} = require('child_process');
-const wrapper = new Redite({url: URL});
+
+const client = redis.createClient({db: DB});
+const wrapper = new Redite({client});
+
+// Clear out the database before and after use, to make sure that all data is just our own.
+beforeEach(function(done) {
+    client.flushdb(err => err ? done(err) : done());
+});
+
+after(function(done) {
+    client.flushdb(err => err ? done(err) : done());
+});
 
 describe('Extra coverage', function() {
     it('should auto-gen settings when not given anything', function() {
@@ -22,9 +34,10 @@ describe('Extra coverage', function() {
 
     it("shouldn't unref if told to", function(done) {
         this.timeout(10000);
+        this.slow(12000);
 
         let works = false;
-        let child = fork(`${__dirname}/unrefTest.js`);
+        let child = fork(`${__dirname}/lib/unrefTest.js`);
         let timer = setTimeout(() => {
             works = true;
             child.kill();
@@ -67,6 +80,26 @@ describe('Extra coverage', function() {
             return wrapper.resolveHasStack('test');
         }).then(exists => {
             expect(exists).to.be.true;
+        });
+    });
+
+    describe('resolveArrayMethods', function() {
+        it('should throw an error on an unsupported method', function() {
+            try {
+                wrapper.resolveArrayHelpers('foo');
+            } catch(err) {
+                expect(err).to.be.instanceof(Error);
+                expect(err.message).to.equal('Method "foo" is not supported.');
+            }
+        });
+
+        it('should throw an error on an empty stack', function() {
+            try {
+                wrapper.resolveArrayHelpers('forEach');
+            } catch(err) {
+                expect(err).to.be.instanceof(Error);
+                expect(err.message).to.equal('At least one key is required in the stack');
+            }
         });
     });
 });

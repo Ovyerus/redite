@@ -6,6 +6,10 @@
 const redis = require('redis');
 require('./entriesPolyfill');
 
+const MUTATING_METHODS = ['push', 'remove', 'removeIndex', 'pop', 'shift', 'unshift'];
+const NONMUTATING_METHODS = ['concat', 'find', 'findIndex', 'includes', 'indexOf', 'lastIndexOf', 'map', 'length', 'filter', 'join', 'forEach'];
+const SUPPORTED_ARRAY_METHODS = MUTATING_METHODS.concat(NONMUTATING_METHODS);
+
 // FIND A BETTER WAY DUMBASS
 function promisify(func, thisArg, ...args) {
     return new Promise((resolve, reject) => { 
@@ -22,9 +26,12 @@ function genTree(stack) {
     let ret = isNaN(stack[0]) ? {} : [];
     let ref = ret;
 
-    stack.forEach((key, next) => {
-        ref = ref[key] = isNaN(stack[Number(next) + 1]) ? {} : []; // Pointer abuse yay
-    });
+    for (let i = 0; i < stack.length; i++) {
+        let key = stack[i];
+        let next = stack[i + 1];
+
+        ref = ref[key] = isNaN(next) ? {} : [];
+    }
 
     return ret;
 }
@@ -60,6 +67,8 @@ class ChildWrapper {
                     if (key != null) stack.push(key);
                     return parentObj.resolveDeleteStack(stack.shift(), stack);
                 };
+
+                if (SUPPORTED_ARRAY_METHODS.includes(key)) return parentObj.resolveArrayHelpers(key, stack.concat(parentKey));
 
                 // Continues the stack with another ChildWrapper.
                 return new ChildWrapper(parentObj, key, stack.concat(parentKey));
@@ -212,6 +221,7 @@ class Redite {
             // If there's only one key in the stack, replace the entire list in the database with the new one.
             if (Array.isArray(value) && value.length && stack.length === 1) {
                 return resolve(promisify(this._redis.del, this._redis, stack[0]).then(() => {
+                    // RPUSH is used as it will put the elements in the order that I want.
                     return promisify(this._redis.rpush, this._redis, stack.concat(value.map(v => this._serialise(v))));
                 }));
             } else if (Array.isArray(value) && !value.length && stack.length === 1) {
@@ -370,8 +380,108 @@ class Redite {
             }).then(resolve).catch(reject);
         });
     }
+
+    resolveArrayHelpers(method, stack=[]) {
+        if (!SUPPORTED_ARRAY_METHODS.includes(method)) throw new Error(`Method "${method}" is not supported.`);
+        if (!stack || !stack.length) throw new Error('At least one key is required in the stack');
+
+        return function(...args) {
+            return new Promise((resolve, reject) => {
+                promisify(this._redis.type, this._redis, stack[0]).then(type => {
+                    if ((type === 'list' || type === 'none') && stack.length === 1) {
+                        let p;
+                        // Allow's lists to be mutated fast if just one key is given.
+                        switch (method) {
+                            case 'push':
+                                p = promisify(this._redis.rpush, this._redis, [stack[0]].concat(args.map(val => this._serialise(val))));
+                                break;
+                            case 'pop':
+                                p = promisify(this._redis.rpop, this._redis, stack[0]).then(res => this._parse(res));
+                                break;
+                            case 'unshift':
+                                p = promisify(this._redis.lpush, this._redis, [stack[0]].concat(args.map(val => this._serialise(val))));
+                                break;
+                            case 'shift':
+                                p = promisify(this._redis.lpop, this._redis, stack[0]).then(res => this._parse(res));
+                                break;
+                            case 'remove':
+                                p = promisify(this._redis.lrem, this._redis, stack[0], !isNaN(args[1]) ? Number(args[1]) : 0, this._serialise(args[0]));
+                                break;
+                            case 'removeIndex':
+                                p = promisify(this._redis.lset, this._redis, stack[0], args[0], this._deletedString).then(() => {
+                                    return promisify(this._redis.lrem, this._redis, stack[0], 0, this._deletedString);
+                                });
+                                break;
+                            case 'length':
+                                p = promisify(this._redis.llen, this._redis, stack[0]);
+                                break;
+                        }
+
+                        return Promise.all([p, 'finish']);
+                    } else {
+                        return Promise.all([this.resolveStack(stack[0], stack.slice(1)), 'continue']);
+                    }
+                }).then(res => {
+                    if (res[1] === 'finish') return [res[0]];
+
+                    if (!Array.isArray(res[0])) throw new TypeError(`Unable to apply array method "${method}" to a non-array (${typeof res[0]})`);
+
+                    let val = res[0];
+                    let write = true;
+                    let ret;
+
+                    // Handles the non-mutating and mutating methods easily, along with special handling for my added ones.
+                    // This was much better than a giant switch/case block.
+                    if (method === 'length') {
+                        ret = val.length;
+                        write = false;
+                    } else if (NONMUTATING_METHODS.includes(method) && method !== 'forEach') {
+                        ret = val[method].apply(val, args);
+                        write = false;
+                    } else if (method === 'forEach') {
+                        val.forEach.apply(val, args);
+                        ret = val;
+                        write = false;
+                    } else if (MUTATING_METHODS.includes(method) && !['remove', 'removeIndex'].includes(method)) {
+                        ret = val[method].apply(val, args);
+                    } else if (method === 'remove') {
+                        if (!args.length) throw new Error('You must provide an item to remove.');
+                        if (typeof args[1] !== 'number') args[1] = 0;
+
+                        let i = args[1];
+
+                        if (i > 0) {
+                            for (; i > 0; i--) {
+                                val.splice(val.indexOf(args[0]), 1);
+
+                                if (val.indexOf(args[0]) === -1) break;
+                            }
+                        } else if (i < 0) {
+                            for (; i < 0; i++) {
+                                val.splice(val.lastIndexOf(args[0]), 1);
+
+                                if (val.indexOf(args[0]) === -1) break;
+                            }
+                        } else while (val.indexOf(args[0]) !== -1) val.splice(val.indexOf(args[0]), 1);
+                    } else if (method === 'removeIndex') {
+                        if (typeof args[0] !== 'number') throw new Error('You must provide an index to remove.');
+
+                        val.splice(args[0], 1);
+                    }
+
+                    return Promise.all([ret, write ? this.resolveSetStack(val, stack) : null]);
+                }).then(res => resolve(res[0])).catch(reject);
+            });
+        }.bind(this);
+    }
 }
 
 // Export the ChildWrapper class in-case someone wishes to do something with it for whatever reason.
 Redite.ChildWrapper = ChildWrapper;
+Redite.ARRAY_METHODS = {
+    NONMUTATING_METHODS,
+    MUTATING_METHODS,
+    SUPPORTED_ARRAY_METHODS
+};
+
 module.exports = Redite;
