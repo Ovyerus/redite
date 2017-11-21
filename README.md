@@ -158,3 +158,7 @@ db.foo.set('Hello world!').then(() => db.has('foo')).then(exists => {
     console.log(exists); // false
 }).catch(console.error);
 ```
+
+#### **Working with Arrays**
+Redite has support for several methods that help when working with arrays.  
+Documentation for these is available [here](./ARRAY_METHODS.md).
