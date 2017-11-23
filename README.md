@@ -75,7 +75,7 @@ client.hset('users', 'ovyerus', 'Ovyerus@users.noreply.github.com', err => {
 | options.serialise    | Function          | `JSON.stringify`                         | Function that takes in a JS object and returns a string that can be sent to Redis.                        |
 | options.parse        | Function          | `JSON.parse`                             | Function that takes in a string and returns the JS object that it represents.                             |
 | options.deleteString | String            | `@__DELETED__@`                          | String to use as a temporary placeholder when deleting root indexes in a list.                            |
-| options.dontUnref    | Boolean           | `false`                                  | If false, `unref()` will be called on the Redis connection, allowing Node to close if nothing is running. |
+| options.unref        | Boolean           | `true`                                   | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.         |
 
 
 #### **Accessing Objects**

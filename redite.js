@@ -117,7 +117,7 @@ class Redite {
      * @param {Function} [options.serialise=JSON.stringify] Function to serialise data to store into Redis.
      * @param {Function} [options.parse=JSON.parse] Function to parse data returned from Redis, into JS objects.
      * @param {String} [options.deletedString='@__DELETED__@'] String to use when deleting values from lists.
-     * @param {Boolean} [options.dontUnref=true] Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.
+     * @param {Boolean} [options.unref=false] Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.
      */
     constructor(options={}) {
         this._redis = options.client || redis.createClient({url: options.url});
@@ -127,7 +127,7 @@ class Redite {
 
         // THIS DOES GET TESTED YOU DUMBASS
         /* istanbul ignore next */
-        if (!options.dontUnref) this._redis.unref(); // Lets Node exit if nothing is happening.
+        if (options.unref) this._redis.unref(); // Lets Node exit if nothing is happening.
 
         /*
            According to this Stack Overflow post (https://stackoverflow.com/a/40714458/8778928), this is really the only way to "extend" a proxy,

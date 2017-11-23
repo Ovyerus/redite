@@ -32,23 +32,20 @@ describe('Extra coverage', function() {
         expect(db._deletedString).to.equal('@__DELETED__@');
     });
 
-    it("shouldn't unref if told to", function(done) {
-        this.timeout(10000);
+    it("should unref if told to", function(done) {
+        this.timeout(12000);
         this.slow(12000);
 
-        let works = false;
         let child = fork(`${__dirname}/lib/unrefTest.js`);
+
         let timer = setTimeout(() => {
-            works = true;
             child.kill();
-            done();
+            done(new Error('Child process did not exit.'));
         }, 5000);
 
         child.on('close', () => {
-            if (!works) {
-                clearTimeout(timer);
-                done(new Error('child process closed prematurely.'));
-            }
+            clearTimeout(timer);
+            done();
         });
     });
 
