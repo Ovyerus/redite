@@ -4,6 +4,7 @@
  */
 
 const redis = require('redis');
+const util = require('util');
 require('./entriesPolyfill');
 
 const MUTATING_METHODS = ['push', 'remove', 'removeIndex', 'pop', 'shift', 'unshift'];
@@ -105,6 +106,7 @@ class ChildWrapper {
  * @prop {Function} _serialise Serialisation function used to turn objects into strings to store into Redis.
  * @prop {Function} _parse Function used to parse strings returned from Redis, into JS objects.
  * @prop {String} _deletedString String used when deleting values from lists.
+ * @prop {Boolean} _customInspection Whether or not to use a custom inspection.
  */
 class Redite {
     /**
@@ -117,6 +119,7 @@ class Redite {
      * @param {Function} [options.serialise=JSON.stringify] Function to serialise data to store into Redis.
      * @param {Function} [options.parse=JSON.parse] Function to parse data returned from Redis, into JS objects.
      * @param {String} [options.deletedString='@__DELETED__@'] String to use when deleting values from lists.
+     * @param {Boolean} [options.customInspection] Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data.
      * @param {Boolean} [options.unref=false] Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.
      */
     constructor(options={}) {
@@ -124,10 +127,25 @@ class Redite {
         this._serialise = options.serialise || JSON.stringify;
         this._parse = options.parse || JSON.parse;
         this._deletedString = options.deletedString || '@__DELETED__@';
+        this._customInspection = options.customInspection || false;
 
-        // THIS DOES GET TESTED YOU DUMBASS
         /* istanbul ignore next */
         if (options.unref) this._redis.unref(); // Lets Node exit if nothing is happening.
+        if (options.customInspection) {
+            this[util.inspect.custom] = () => {
+                let scope = this;
+                
+                return new (class Redite {
+                    constructor() {
+                        this.redis = '<hidden>';
+                        this.serialise = scope._serialise;
+                        this.parse = scope._parse;
+                        this.deletedString = scope._deletedString;
+                        this.customInspection = scope._customInspection;
+                    }
+                })();
+            };
+        }
 
         /*
            According to this Stack Overflow post (https://stackoverflow.com/a/40714458/8778928), this is really the only way to "extend" a proxy,
@@ -135,7 +153,7 @@ class Redite {
         */
         return new Proxy(this, {
             get(obj, key) {
-                if (obj[key]) return obj[key];
+                if (obj.hasOwnProperty(key)) return obj[key];
 
                 // "Special" methods
                 if (key === 'set') throw new Error('You cannot use `.set` on the root object.');
