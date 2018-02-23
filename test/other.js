@@ -32,7 +32,7 @@ describe('Extra coverage', function() {
         expect(db._deletedString).to.equal('@__DELETED__@');
     });
 
-    it("should unref if told to", function(done) {
+    it('should unref if told to', function(done) {
         this.timeout(12000);
         this.slow(12000);
 

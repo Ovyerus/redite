@@ -1,49 +1,49 @@
 {
-  "name": "redite",
-  "version": "1.1.0",
-  "description": "A Redis wrapper using ES6 Proxies.",
-  "main": "redite.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "nyc mocha --exit",
-    "lint": "eslint **/*.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Ovyerus/redite.git"
-  },
-  "keywords": [
-    "redite",
-    "redis",
-    "database",
-    "es6",
-    "proxies",
-    "proxy"
-  ],
-  "author": "Ovyerus",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Ovyerus/redite/issues"
-  },
-  "homepage": "https://github.com/Ovyerus/redite#readme",
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^4.11.0",
-    "mocha": "^4.0.1",
-    "nyc": "^11.3.0"
-  },
-  "dependencies": {
-    "redis": "^2.8.0"
-  },
-  "nyc": {
-    "reporter": [
-      "lcov"
+    "name": "redite",
+    "version": "1.1.0",
+    "description": "A Redis wrapper using ES6 Proxies.",
+    "main": "src/redite.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "nyc mocha --exit",
+        "lint": "eslint src test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Ovyerus/redite.git"
+    },
+    "keywords": [
+        "redite",
+        "redis",
+        "database",
+        "es6",
+        "proxies",
+        "proxy"
     ],
-    "exclude": [
-      "entriesPolyfill.js",
-      "test/"
-    ]
-  }
+    "author": "Ovyerus",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Ovyerus/redite/issues"
+    },
+    "homepage": "https://github.com/Ovyerus/redite#readme",
+    "devDependencies": {
+        "chai": "^4.1.2",
+        "eslint": "^4.11.0",
+        "mocha": "^4.0.1",
+        "nyc": "^11.3.0"
+    },
+    "dependencies": {
+        "redis": "^2.8.0"
+    },
+    "nyc": {
+        "reporter": [
+        "lcov"
+        ],
+        "exclude": [
+        "entriesPolyfill.js",
+        "test/"
+        ]
+    }
 }

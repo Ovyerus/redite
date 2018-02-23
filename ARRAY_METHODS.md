@@ -1,7 +1,7 @@
 # Array Helper Methods
 Redite supports several array methods which can be run when receiving arrays from the database.
 Methods which normally mutate arrays in place (e.g. `push`, `pop`) will edit the array in the 
-database without returningthat edited copy, however they will return what they normally do.  
+database without returning that edited copy, however they will return what they normally do.  
 Mutating methods can also be run on first level arrays (Redis lists).
 
 Non-mutating methods will not change the value in the database, and will instead get the value,
