@@ -153,7 +153,7 @@ class Redite {
         */
         return new Proxy(this, {
             get(obj, key) {
-                if (obj.hasOwnProperty(key)) return obj[key];
+                if (obj.hasOwnProperty(key) || obj[key]) return obj[key];
 
                 // "Special" methods
                 if (key === 'set') throw new Error('You cannot use `.set` on the root object.');
