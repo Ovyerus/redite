@@ -11,16 +11,18 @@ const MUTATING_METHODS = ['push', 'remove', 'removeIndex', 'pop', 'shift', 'unsh
 const NONMUTATING_METHODS = ['concat', 'find', 'findIndex', 'includes', 'indexOf', 'lastIndexOf', 'map', 'length', 'filter', 'join', 'forEach'];
 const SUPPORTED_ARRAY_METHODS = MUTATING_METHODS.concat(NONMUTATING_METHODS);
 
-// FIND A BETTER WAY DUMBASS
-function promisify(func, thisArg, ...args) {
-    return new Promise((resolve, reject) => { 
-        func.apply(thisArg, [...args, (err, res) => {
-            /* istanbul ignore next */
-            if (err) reject(err);
-            else resolve(res);
-        }]);
-    });
-}
+Object.entries(redis.RedisClient.prototype).filter(v => typeof v[1] === 'function').forEach(([key, func]) => {
+    if (redis.RedisClient.prototype['p' + key]) return;
+
+    redis.RedisClient.prototype['p' + key] = function(...args) {
+        return new Promise((resolve, reject) => {
+            func.call(this, ...args, (err, res) => {
+                if (err) reject(err);
+                else resolve(res);
+            });
+        });
+    };
+});
 
 // Generates an empty tree from a list of keys.
 function genTree(stack) {
@@ -157,8 +159,8 @@ class Redite {
 
                 // "Special" methods
                 if (key === 'set') throw new Error('You cannot use `.set` on the root object.');
-                if (key === 'has') return key => promisify(obj._redis.exists, obj._redis, key).then(val => !!val);
-                if (key === 'delete') return key => promisify(obj._redis.del, obj._redis, key).then(() => {});
+                if (key === 'has') return key => obj._redis.pexists(key).then(val => !!val);
+                if (key === 'delete') return key => obj._redis.pdel(key).then(() => {});
 
                 // Continue the chain with a child object.
                 return new ChildWrapper(obj, key);
@@ -192,16 +194,14 @@ class Redite {
      */
     resolveStack(key, stack=[]) {
         return new Promise((resolve, reject) => {
-            promisify(this._redis.type, this._redis, key).then(type => {
+            this._redis.ptype(key).then(type => {
                 if (type === 'hash') {
-                    if (Array.isArray(stack) && stack.length) return promisify(this._redis.hget, this._redis, key, stack.shift());
-                    else return promisify(this._redis.hgetall, this._redis, key);
+                    if (Array.isArray(stack) && stack.length) return this._redis.phget(key, stack.shift());
+                    else return this._redis.phgetall(key);
                 } else if (type === 'list') {
-                    if (Array.isArray(stack) && stack.length) return promisify(this._redis.lindex, this._redis, key, stack.shift());
-                    else return promisify(this._redis.lrange, this._redis, key, 0, -1);
-                } else {
-                    return promisify(this._redis.get, this._redis, key);
-                }
+                    if (Array.isArray(stack) && stack.length) return this._redis.plindex(key, stack.shift());
+                    else return this._redis.plrange(key, 0, -1);
+                } else return this._redis.pget(key);
             }).then(res => {
                 if (res != null && typeof res === 'object' && !Array.isArray(res)) {
                     // HGETALL was run
@@ -238,9 +238,9 @@ class Redite {
             // Handle arrays as native Redis lists.
             // If there's only one key in the stack, replace the entire list in the database with the new one.
             if (Array.isArray(value) && value.length && stack.length === 1) {
-                return resolve(promisify(this._redis.del, this._redis, stack[0]).then(() => {
+                return resolve(this._redis.pdel(stack[0]).then(() => {
                     // RPUSH is used as it will put the elements in the order that I want.
-                    return promisify(this._redis.rpush, this._redis, stack.concat(value.map(v => this._serialise(v))));
+                    return this._redis.prpush(stack.concat(value.map(v => this._serialise(v))));
                 }));
             } else if (Array.isArray(value) && !value.length && stack.length === 1) {
                 return resolve();
@@ -249,37 +249,37 @@ class Redite {
             // Handle objects as native Redis hashmaps.
             // If only one key is in the stack, replace the entire hashmap with serialised values.
             if (JSON.stringify(value).startsWith('{') && Object.keys(value).length && stack.length === 1) {
-                return resolve(promisify(this._redis.del, this._redis, stack[0]).then(() => {
+                return resolve(this._redis.pdel(stack[0]).then(() => {
                     let arr = [].concat.apply(stack, Object.entries(value).map(([name, val]) => [name, this._serialise(val)]));
 
-                    return promisify(this._redis.hmset, this._redis, arr);
+                    return this._redis.phmset(arr);
                 }));
             } else if (JSON.stringify(value).startsWith('{') && !Object.keys(value).length) {
                 return resolve();
             }
 
             // Otherwise, handle as a regular redis value.
-            promisify(this._redis.type, this._redis, stack[0]).then(type => {
+            this._redis.ptype(stack[0]).then(type => {
                 if (type === 'list') {
                     // If the given base key is a list, handle it properly.
                     if (stack.length === 2) {
-                        return Promise.all([promisify(this._redis.lset, this._redis, stack.slice(0, 2).concat(this._serialise(value))), 'finish']);
+                        return Promise.all([this._redis.plset(stack.slice(0, 2).concat(this._serialise(value))), 'finish']);
                     } else {
-                        return Promise.all([promisify(this._redis.lindex, this._redis, stack.slice(0, 2)), 'list']);
+                        return Promise.all([this._redis.plindex(stack.slice(0, 2)), 'list']);
                     }
                 } else if (type === 'hash') {
                     // If the given base key is a hash, handle it properly.
                     if (stack.length === 2) {
-                        return Promise.all([promisify(this._redis.hset, this._redis, stack.slice(0, 2).concat(this._serialise(value))), 'finish']);
+                        return Promise.all([this._redis.phset(stack.slice(0, 2).concat(this._serialise(value))), 'finish']);
                     } else {
-                        return Promise.all([promisify(this._redis.hget, this._redis, stack.slice(0, 2)), 'hash']);
+                        return Promise.all([this._redis.phget(stack.slice(0, 2)), 'hash']);
                     }
                 } else if (type === 'none' && stack.length > 1) {
                     // Construct a tree representing the key stack if the user tries to set it when it doesn't exist.
                     return [genTree(stack.slice(1)), 'faked'];
                 } else {
                     // Otherwise handle it as a regular value.
-                    return Promise.all([promisify(this._redis.set, this._redis, stack[0], this._serialise(value)), 'finish']);
+                    return Promise.all([this._redis.pset(stack[0], this._serialise(value)), 'finish']);
                 }
             }).then(res => {
                 if (res[1] === 'finish') return;
@@ -301,17 +301,17 @@ class Redite {
                 ref[stack.slice(-1)[0]] = value; // Set the final nested value.
 
                 if (type === 'list') {
-                    return promisify(this._redis.lset, this._redis, stack[0], stack[1], this._serialise(res));
+                    return this._redis.plset(stack[0], stack[1], this._serialise(res));
                 } else if (type === 'hash') {
-                    return promisify(this._redis.hset, this._redis, stack[0], stack[1], this._serialise(res));
+                    return this._redis.phset(stack[0], stack[1], this._serialise(res));
                 } else if (type === 'faked') {
                     if (Array.isArray(res)) {
-                        return promisify(this._redis.rpush, this._redis, [stack[0]].concat(res.map(val => this._serialise(val))));
+                        return this._redis.prpush([stack[0]].concat(res.map(val => this._serialise(val))));
                     } else {
                         // Did someone say stupidly long one-liners?
                         let arr = [].concat.apply([stack[0]], Object.entries(res).map(([name, val]) => [name, this._serialise(val)]));
 
-                        return promisify(this._redis.hmset, this._redis, arr);
+                        return this._redis.phmset(arr);
                     }
                 }
             }).then(() => resolve()).catch(reject);
@@ -328,16 +328,16 @@ class Redite {
      */
     resolveDeleteStack(key, stack=[]) {
         return new Promise((resolve, reject) => {
-            if (!stack || !stack.length) return resolve(promisify(this._redis.del, this._redis, key).then(() => {}));
+            if (!stack || !stack.length) return resolve(this._redis.pdel(key).then(() => {}));
 
-            promisify(this._redis.type, this._redis, key).then(type => {
+            this._redis.ptype(key).then(type => {
                 if (type === 'hash' && stack.length === 1) {
                     // Handle hashes
-                    return Promise.all([promisify(this._redis.hdel, this._redis, key, stack[0]), 'finish']);
+                    return Promise.all([this._redis.phdel(key, stack[0]), 'finish']);
                 } else if (type === 'list' && stack.length === 1) {
                     // Handle lists
-                    let p = promisify(this._redis.lset, this._redis, key, stack[0], this._deletedString).then(() => {
-                        return promisify(this._redis.lrem, this._redis, key, 0, this._deletedString);
+                    let p = this._redis.plset(key, stack[0], this._deletedString).then(() => {
+                        return this._redis.plrem(key, 0, this._deletedString);
                     });
 
                     return Promise.all([p, 'finish']);
@@ -371,17 +371,17 @@ class Redite {
      */
     resolveHasStack(key, stack=[]) {
         return new Promise((resolve, reject) => {
-            if (!stack || !stack.length) return resolve(promisify(this._redis.exists, this._redis, key).then(res => !!res));
+            if (!stack || !stack.length) return resolve(this._redis.pexists(key).then(res => !!res));
 
-            promisify(this._redis.type, this._redis, key).then(type => {
+            this._redis.ptype(key).then(type => {
                 if (type === 'list') {
-                    return Promise.all([promisify(this._redis.lindex, this._redis, key, stack.shift()), 'list']);
+                    return Promise.all([this._redis.plindex(key, stack.shift()), 'list']);
                 } else if (type === 'hash' && stack.length === 1) {
-                    return Promise.all([promisify(this._redis.hexists, this._redis, key, stack[0]), 'finish']);
+                    return Promise.all([this._redis.phexists(key, stack[0]), 'finish']);
                 } else if (type === 'hash') {
-                    return Promise.all([promisify(this._redis.hget, this._redis, key, stack.shift()), 'hash']);
+                    return Promise.all([this._redis.phget(key, stack.shift()), 'hash']);
                 } else {
-                    return Promise.all([promisify(this._redis.get, this._redis, key), 'normal']);
+                    return Promise.all([this._redis.pget(key), 'normal']);
                 }
             }).then(res => {
                 if (res[1] === 'finish') return !!res[0]; // Coerce to boolean since node_redis doesnt.
@@ -405,33 +405,33 @@ class Redite {
 
         return function(...args) {
             return new Promise((resolve, reject) => {
-                promisify(this._redis.type, this._redis, stack[0]).then(type => {
+                this._redis.ptype(stack[0]).then(type => {
                     if ((type === 'list' || type === 'none') && stack.length === 1) {
                         let p;
                         // Allow's lists to be mutated fast if just one key is given.
                         switch (method) {
                             case 'push':
-                                p = promisify(this._redis.rpush, this._redis, [stack[0]].concat(args.map(val => this._serialise(val))));
+                                p = this._redis.prpush([stack[0]].concat(args.map(val => this._serialise(val))));
                                 break;
                             case 'pop':
-                                p = promisify(this._redis.rpop, this._redis, stack[0]).then(res => this._parse(res));
+                                p = this._redis.prpop(stack[0]).then(res => this._parse(res));
                                 break;
                             case 'unshift':
-                                p = promisify(this._redis.lpush, this._redis, [stack[0]].concat(args.map(val => this._serialise(val))));
+                                p = this._redis.plpush([stack[0]].concat(args.map(val => this._serialise(val))));
                                 break;
                             case 'shift':
-                                p = promisify(this._redis.lpop, this._redis, stack[0]).then(res => this._parse(res));
+                                p = this._redis.plpop(stack[0]).then(res => this._parse(res));
                                 break;
                             case 'remove':
-                                p = promisify(this._redis.lrem, this._redis, stack[0], !isNaN(args[1]) ? Number(args[1]) : 0, this._serialise(args[0]));
+                                p = this._redis.plrem(stack[0], !isNaN(args[1]) ? Number(args[1]) : 0, this._serialise(args[0]));
                                 break;
                             case 'removeIndex':
-                                p = promisify(this._redis.lset, this._redis, stack[0], args[0], this._deletedString).then(() => {
-                                    return promisify(this._redis.lrem, this._redis, stack[0], 0, this._deletedString);
+                                p = this._redis.plset(stack[0], args[0], this._deletedString).then(() => {
+                                    return this._redis.plrem(stack[0], 0, this._deletedString);
                                 });
                                 break;
                             case 'length':
-                                p = promisify(this._redis.llen, this._redis, stack[0]);
+                                p = this._redis.pllen(stack[0]);
                                 break;
                         }
 
