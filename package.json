@@ -39,11 +39,11 @@
     },
     "nyc": {
         "reporter": [
-        "lcov"
+            "lcov"
         ],
         "exclude": [
-        "entriesPolyfill.js",
-        "test/"
+            "src/entriesPolyfill.js",
+            "test/"
         ]
     }
 }
