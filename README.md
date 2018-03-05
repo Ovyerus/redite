@@ -1,7 +1,10 @@
 # redite
-[![Maintainability](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/maintainability)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/test_coverage)](https://codeclimate.com/github/Ovyerus/redite/test_coverage)
-[![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)
+[![Maintainability](https://img.shields.io/codeclimate/maintainability/Ovyerus/redite.svg)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
+[![Test Coverage](https://img.shields.io/codeclimate/c/Ovyerus/redite.svg)](https://codeclimate.com/github/Ovyerus/redite/test_coverage)
+[![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)  
+[![NPM Downloads](https://img.shields.io/npm/dt/redite.svg)](https://npmjs.com/package/redite)
+[![NPM Version](https://img.shields.io/npm/v/redite.svg)](https://npmjs.com/package/redite)
+
 
 (Named after the mineral [Reidite](https://en.wikipedia.org/wiki/Reidite))  
 Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
