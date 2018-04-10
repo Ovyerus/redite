@@ -122,8 +122,9 @@ class Redite {
      * @param {Function} [options.serialise=JSON.stringify] Function to serialise data to store into Redis.
      * @param {Function} [options.parse=JSON.parse] Function to parse data returned from Redis, into JS objects.
      * @param {String} [options.deletedString='@__DELETED__@'] String to use when deleting values from lists.
-     * @param {Boolean} [options.customInspection] Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data.
      * @param {Boolean} [options.unref=false] Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.
+     * @param {Boolean} [options.customInspection] Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data.
+     * @param {Boolean} [options.ignoreUndefinedValues=false] Whether to ignore `undefined` as a base value when setting values.
      */
     constructor(options={}) {
         this._redis = options.client || redis.createClient({url: options.url});
@@ -131,6 +132,7 @@ class Redite {
         this._parse = options.parse || JSON.parse;
         this._deletedString = options.deletedString || '@__DELETED__@';
         this._customInspection = options.customInspection || false;
+        this._ignoreUndefinedValues = options.ignoreUndefinedValues || false;
 
         /* istanbul ignore next */
         if (options.unref) this._redis.unref(); // Lets Node exit if nothing is happening.
@@ -140,11 +142,12 @@ class Redite {
                 
                 return new (class Redite {
                     constructor() {
-                        this.redis = '<hidden>';
-                        this.serialise = scope._serialise;
-                        this.parse = scope._parse;
-                        this.deletedString = scope._deletedString;
-                        this.customInspection = scope._customInspection;
+                        this._redis = '<hidden>';
+                        this._serialise = scope._serialise;
+                        this._parse = scope._parse;
+                        this._deletedString = scope._deletedString;
+                        this._customInspection = scope._customInspection;
+                        this._ignoreUndefinedValues = scope._ignoreUndefinedValues;
                     }
                 })();
             };
@@ -235,6 +238,7 @@ class Redite {
     resolveSetStack(value, stack=[]) {
         return new Promise((resolve, reject) => {
             if (!stack || !stack.length) return reject(new Error('At least one key is required in the stack'));
+            if (value === undefined && this._ignoreUndefinedValues) return resolve();
 
             // Handle arrays as native Redis lists.
             // If there's only one key in the stack, replace the entire list in the database with the new one.
@@ -249,13 +253,14 @@ class Redite {
 
             // Handle objects as native Redis hashmaps.
             // If only one key is in the stack, replace the entire hashmap with serialised values.
-            if (JSON.stringify(value).startsWith('{') && Object.keys(value).length && stack.length === 1) {
+            let isObj = JSON.stringify(value) && JSON.stringify(value).startsWith('{');
+            if (isObj && Object.keys(value).length && stack.length === 1) {
                 return resolve(this._redis.pdel(stack[0]).then(() => {
                     let arr = [].concat.apply(stack, Object.entries(value).map(([name, val]) => [name, this._serialise(val)]));
 
                     return this._redis.phmset(arr);
                 }));
-            } else if (JSON.stringify(value).startsWith('{') && !Object.keys(value).length) {
+            } else if (isObj && !Object.keys(value).length) {
                 return resolve();
             }
 
