@@ -115,11 +115,12 @@ describe('Extra coverage', function() {
         it('should have regular values, with `redis` set to "<hidden>"', function() {
             let res = wrapper[custom]();
 
-            expect(res.redis).to.equal('<hidden>');
-            expect(res.serialise).to.equal(wrapper._serialise);
-            expect(res.parse).to.equal(wrapper._parse);
-            expect(res.deletedString).to.equal(wrapper._deletedString);
-            expect(res.customInspection).to.equal(wrapper._customInspection);
+            expect(res._redis).to.equal('<hidden>');
+            expect(res._serialise).to.equal(wrapper._serialise);
+            expect(res._parse).to.equal(wrapper._parse);
+            expect(res._deletedString).to.equal(wrapper._deletedString);
+            expect(res._customInspection).to.equal(wrapper._customInspection);
+            expect(res._ignoreUndefinedValues).to.equal(wrapper._ignoreUndefinedValues);
         });
     });
 });

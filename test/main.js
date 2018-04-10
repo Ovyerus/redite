@@ -286,11 +286,20 @@ describe('ChildWrapper', function() {
                 });
             });
 
-            it('should not set anything if given an empty object', function() {
+            it('should set a hash with a placeholder value if given an empty object', function() {
                 return wrapper.test.set({}).then(() => {
-                    return promisify(client.exists, client, 'test');
-                }).then(exists => {
-                    expect(exists).to.be.not.ok;
+                    return Promise.all([promisify(client.exists, client, 'test'), wrapper.test.get]);
+                }).then(([exists, value]) => {
+                    expect(exists).to.be.ok;
+                    expect(value).to.deep.equal({__setting_empty_hash__: '__setting_empty_hash__'});
+                });
+            });
+
+            it('should set an empty object on a deeply nested object when given an empty object', function() {
+                return wrapper.test.foo.bar.foobar.set({}).then(() => {
+                    return wrapper.test.foo.bar.foobar.get;
+                }).then(value => {
+                    expect(value).to.deep.equal({});
                 });
             });
 

@@ -260,8 +260,9 @@ class Redite {
 
                     return this._redis.phmset(arr);
                 }));
-            } else if (isObj && !Object.keys(value).length) {
-                return resolve();
+            } else if (isObj && !Object.keys(value).length && stack.length === 1) {
+                // Set a hash with a placeholder value so that Redis doesn't delete it.
+                return resolve(this.resolveSetStack({__setting_empty_hash__: '__setting_empty_hash__'}, stack));
             }
 
             // Otherwise, handle as a regular redis value.
