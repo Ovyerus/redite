@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "lib": ["esnext"],
+        "module": "commonjs",
+        "allowSyntheticDefaultImports": true,
+        "strictNullChecks": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "include": ["index.d.ts"]
+}
