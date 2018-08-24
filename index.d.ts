@@ -4,10 +4,6 @@ declare module 'redite' {
     type MutatingMethod = 'push' | 'remove' | 'removeIndex' | 'pop' | 'shift' | 'unshift'
     type NonMutatingMethod = 'concat' | 'find' | 'findIndex' | 'includes' | 'indexOf' | 'lastIndexOf' | 'map' | 'length' | 'filter' | 'join' | 'forEach'
     type SupportedArrayMethod = MutatingMethod | NonMutatingMethod;
-
-    type ReturnAll<T, U extends string | number> = {
-        [key in U]: T;
-    }
     
     interface ArrayMethods {
         MUTATING_METHODS: MutatingMethod[],
@@ -17,7 +13,7 @@ declare module 'redite' {
     
     export const ARRAY_METHODS: ArrayMethods;
     
-    export class ChildWrapper implements ReturnAll<ChildWrapper | any, string> {
+    export class ChildWrapper {
         get: Promise<any>;
         _promise: Promise<any>;
         _stack: string[];
@@ -64,7 +60,7 @@ declare module 'redite' {
         ignoreUndefinedValues?: boolean;
     }
 
-    export default class Redite implements ReturnAll<ChildWrapper | any, string> {
+    export default class Redite {
         _redis: RedisClient;
         _serialise: (value: any) => string;
         _parse: (value: string) => any;
@@ -77,10 +73,13 @@ declare module 'redite' {
         has(key: string): Promise<boolean>;
         delete(key: string): Promise<void>;
 
-        resolveStack(key: string, stack?: string[]): Promise<any>;
-        resolveSetStack(value: any, stack?: string[]): Promise<void>;
-        resolveDeleteStack(key: string, stack?: string[]): Promise<void>;
-        resolveHasStack(key: string, stack?: string[]): Promise<boolean>;
-        resolveArrayHelpers(method: string, stack?: string[]): (...args) => Promise<any>;
+        getStack(key: string, stack?: string[]): Promise<any>;
+        setStack(value: any, stack?: string[]): Promise<void>;
+        deleteStack(key: string, stack?: string[]): Promise<void>;
+        hasStack(key: string, stack?: string[]): Promise<boolean>;
+        arrayStack(method: string, stack?: string[]): (...args) => Promise<any>;
+
+        [key: string]: ChildWrapper | any;
+        [key: number]: ChildWrapper | any;
     }
 }
