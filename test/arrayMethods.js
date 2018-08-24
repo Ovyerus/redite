@@ -203,13 +203,13 @@ describe('Array helper methods', function() {
 
     describe('Methods on nested keys', function() {
         describe('Attempting to run a method on a non-array', function() {
-            Redite.ARRAY_METHODS.SUPPORTED_ARRAY_METHODS.forEach(meth => {
+            Redite.Constants.SupportedArrayMethods.forEach(meth => {
                 it(`method "${meth}" should throw an error if the last object is not an array`, function() {
                     return wrapper.test.set(TEST_HASH).then(() => {
                         return wrapper.test[meth]();
                     }).catch(err => {
                         expect(err).to.be.instanceof(TypeError);
-                        expect(err.message).to.include(`Unable to apply array method "${meth}" to a non-array`);
+                        expect(err.message).to.include(`Unable to apply method "${meth}" to a non-array`);
                     });
                 });
             });
@@ -490,7 +490,7 @@ describe('Array helper methods', function() {
                             return wrapper.test.foo.remove();
                         }).catch(err => {
                             expect(err).to.be.instanceof(Error);
-                            expect(err.message).to.equal('You must provide an item to remove.');
+                            expect(err.message).to.equal('You must provide an item to remove');
                         });
                     });
                 });
@@ -580,8 +580,8 @@ describe('Array helper methods', function() {
                 ['lastIndexOf', 'not find the last index of the wanted value', ['find me'], -1, FINDER_ALT],
                 ['map', 'map the given function on all values', [val => val + val.split('').reverse().join('')], [`${TEST_VAL}TSET`, 'reverseesrever', 'racecarracecar'], [TEST_VAL, 'reverse', 'racecar']],
                 ['filter', 'filter out the unwanted values', [val => val !== TEST_VAL], FINDER.filter(val => val !== TEST_VAL), FINDER],
-                ['join', 'join all the values with a `-`', ['-'], FINDER.join('-'), FINDER],
-                ['forEach', 'add one to all the values', [(val, ind, parent) => parent[ind] = ++val], [1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5]]
+                ['join', 'join all the values with a `-`', ['-'], FINDER.join('-'), FINDER]
+                // ['forEach', 'add one to all the values', [val => tmp.push(++val)], [1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5]]
             ].forEach(([method, description, args, expected, initial=[TEST_VAL]]) => {
                 describe(`.${method}`, function() {
                     it(`should ${description} and not edit the database (surface array)`, function() {

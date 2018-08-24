@@ -52,50 +52,50 @@ describe('Extra coverage', function() {
         });
     });
 
-    it("(resolveStack) shouldn't care about not being given a stack", function() {
+    it("(getStack) shouldn't care about not being given a stack", function() {
         return wrapper.test.set(TEST_HASH).then(() => {
-            return wrapper.resolveStack('test');
+            return wrapper.getStack('test');
         }).then(res => {
             expect(res).to.deep.equal(TEST_HASH);
         });
     });
 
-    it('(resolveSetStack) should throw an error when not given a stack', function() {
-        return wrapper.resolveSetStack(TEST_HASH).catch(err => {
+    it('(setStack) should throw an error when not given a stack', function() {
+        return wrapper.setStack(TEST_HASH).catch(err => {
             expect(err).to.be.instanceof(Error);
             expect(err.message).to.equal('At least one key is required in the stack');
         });
     });
 
-    it("(resolveDeleteStack) shouldn't care about not being given a stack", function() {
+    it("(deleteStack) shouldn't care about not being given a stack", function() {
         return wrapper.test.set(TEST_HASH).then(() => {
-            return wrapper.resolveDeleteStack('test');
+            return wrapper.deleteStack('test');
         }).then(() => wrapper.test.exists()).then(exists => {
             expect(exists).to.be.false;
         });
     });
 
-    it("(resolveHasStack) shouldn't care about not being given a stack", function() {
+    it("(hasStack) shouldn't care about not being given a stack", function() {
         return wrapper.test.set(TEST_HASH).then(() => {
-            return wrapper.resolveHasStack('test');
+            return wrapper.hasStack('test');
         }).then(exists => {
             expect(exists).to.be.true;
         });
     });
 
-    describe('resolveArrayMethods', function() {
+    describe('arrayStack', function() {
         it('should throw an error on an unsupported method', function() {
             try {
-                wrapper.resolveArrayHelpers('foo');
+                wrapper.arrayStack('foo');
             } catch(err) {
                 expect(err).to.be.instanceof(Error);
-                expect(err.message).to.equal('Method "foo" is not supported.');
+                expect(err.message).to.equal('Method "foo" is not supported');
             }
         });
 
         it('should throw an error on an empty stack', function() {
             try {
-                wrapper.resolveArrayHelpers('forEach');
+                wrapper.arrayStack('forEach');
             } catch(err) {
                 expect(err).to.be.instanceof(Error);
                 expect(err.message).to.equal('At least one key is required in the stack');
