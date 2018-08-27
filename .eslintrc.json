@@ -1,12 +1,11 @@
 {
     "env": {
-        "es6": true,
-        "node": true
+        "node": true,
+        "es6": true
     },
 
-    "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 8
+        "ecmaVersion": 9
     },
 
     "rules": {
@@ -38,7 +37,11 @@
         "quote-props": ["error", "as-needed"],
         "semi-spacing": "error",
         "space-before-blocks": ["error", "always"],
-        "space-before-function-paren": ["error", "never"],
+        "space-before-function-paren": ["error", {
+            "anonymous": "never",
+            "named": "never",
+            "asyncArrow": "always"
+        }],
         "space-in-parens": "error",
         "space-unary-ops": ["error", {"words": true, "nonwords": false}],
         "arrow-parens": ["warn", "as-needed"],
@@ -68,7 +71,9 @@
                     "function": "Function"
                 },
 
-                "requireReturn": false
+                "requireReturn": false,
+                "requireReturnType": false,
+                "requireReturnDescription": false
             }
         ]
     }
