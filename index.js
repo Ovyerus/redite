@@ -9,6 +9,7 @@ Object.entries(redis.RedisClient.prototype).filter(v => typeof v[1] === 'functio
     redis.RedisClient.prototype['p' + key] = function(...args) {
         return new Promise((resolve, reject) => {
             func.call(this, ...args, (err, res) => {
+                /* istanbul ignore next */
                 if (err) reject(err);
                 else resolve(res);
             });

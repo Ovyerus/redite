@@ -49,15 +49,15 @@ class ChildWrapper {
                Throw errors for other methods, as there are special keys that are used for these instead, since this is entirely async.
             */
             set() {
-                throw new Error('Child objects do not support setting (foo.bar = baz).');
+                throw new Error('ChildWrapper does not support setting (foo = bar)');
             },
 
             has() {
-                throw new Error('Child objects do not support containment checks ("foo" in foo.bar).');
+                throw new Error('ChildWrapper does not support containment checks ("foo" in bar)');
             },
 
             deleteProperty() {
-                throw new Error('Child objects do not support deleting properties (delete foo.bar.baz).');
+                throw new Error('ChildWrapper does not support deletion (delete foo.bar)');
             }
         });
     }

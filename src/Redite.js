@@ -33,7 +33,7 @@ class Redite {
         if (options.customInspection) {
             this[util.inspect.custom] = () => {
                 let scope = this;
-                
+
                 return new (class Redite {
                     constructor() {
                         this._redis = '<hidden>';
@@ -53,7 +53,7 @@ class Redite {
                 if (obj.hasOwnProperty(key) || obj[key]) return obj[key];
 
                 // "Special" methods
-                if (key === 'set') throw new Error('You cannot use `.set` on the root object.');
+                if (key === 'set') throw new Error('You cannot use #set on the root object.');
                 if (key === 'has') return key => obj._redis.pexists(key).then(val => !!val);
                 if (key === 'delete') return key => obj._redis.pdel(key).then(() => {});
 
@@ -65,15 +65,15 @@ class Redite {
                 Throw errors for other things users may try on the root object, as they are not supported.
             */
             set() {
-                throw new Error('RedisInterface does not support setting (foo = bar).');
+                throw new Error('Redite does not support setting (foo = bar)');
             },
 
             has() {
-                throw new Error('RedisInterface does not support containment checks ("foo" in bar).');
+                throw new Error('Redite does not support containment checks ("foo" in bar)');
             },
 
             deleteProperty() {
-                throw new Error('RedisInterface does not support deleting properties (delete foo.bar).');
+                throw new Error('Redite does not support deletion (delete foo.bar)');
             }
         });
     }
@@ -81,7 +81,7 @@ class Redite {
     /**
      * Get an object from Redis.
      * You should probably get an object through a simulated object tree.
-     * 
+     *
      * @param {String} key Root key to get.
      * @param {String[]} [stack=[]] Extra keys to apply for the final result.
      * @returns {Promise<*>} Redis value.
@@ -98,7 +98,7 @@ class Redite {
             result = hasStack
                 ? await client.phget(key, stack.shift())
                 : await client.phgetall(key);
-                
+
             if (hasStack)
                 result = this._parse(result);
             else
@@ -110,7 +110,7 @@ class Redite {
             result = hasStack
                 ? await client.plindex(key, stack.shift())
                 : await client.plrange(key, 0, -1);
-            
+
             if (hasStack)
                 result = this._parse(result);
             else
@@ -127,7 +127,7 @@ class Redite {
 
     /**
      * Set an object in Redis, with special handling for native types.
-     * 
+     *
      * @param {*} value Value to set.
      * @param {String[]} [stack=[]] Key stack to set to.
      */
@@ -219,7 +219,7 @@ class Redite {
                     this._serialise(val)
                 )));
             else {
-                const hm = [].concat.apply([stack[0]], Object.entries(result).map(([key, val]) => 
+                const hm = [].concat.apply([stack[0]], Object.entries(result).map(([key, val]) =>
                     [key, this._serialise(val)]
                 ));
 
@@ -231,7 +231,7 @@ class Redite {
     /**
      * Delete's a given tree from Redis.
      * Only deletes whatever happens to be the top level key.
-     * 
+     *
      * @param {String} key Root key to delete from.
      * @param {String[]} [stack=[]] Key stack to follow and eventually delete. If left blank, the root key will be deleted.
      */
@@ -266,7 +266,7 @@ class Redite {
 
     /**
      * Determines whether a tree exists in Redis.
-     * 
+     *
      * @param {String} key Root key to check existance for.
      * @param {String[]} [stack=[]] Key stack to follow and check existance for.
      * @returns {Promise<Boolean>} Whether the key exists.
@@ -304,14 +304,14 @@ class Redite {
      * @function ArrayMethodHandler
      * A function that handles array methods for Redis values.
      * @see {@link /ARRAY_METHODS.md}
-     * 
+     *
      * @param {...*[]} [args] Arguments to pass to the method.
      * @returns {Promise<*>} Result from the method.
      */
 
     /**
      * Handles resolution of the various supported array methods.
-     * 
+     *
      * @param {String} method Array method to run.
      * @param {String[]} stack Key stack to run the method on.
      * @returns {ArrayMethodHandler} Function emulating the specified method.
@@ -347,7 +347,7 @@ class Redite {
                         p = client.plrem(stack[0], !isNaN(args[1]) ? Number(args[1]) : 0, serialisedArgs[0]);
                         break;
                     case 'removeIndex':
-                        p = client.plset(stack[0], args[0], this._deletedString).then(() => 
+                        p = client.plset(stack[0], args[0], this._deletedString).then(() =>
                             client.plrem(stack[0], 0, this._deletedString)
                         );
                         break;
@@ -363,7 +363,7 @@ class Redite {
 
             const result = await this.getStack(stack[0], stack.slice(1));
 
-            if (!Array.isArray(result)) throw new TypeError(`Unable to apply method "${method}" to a non-array (${typeof result[0]})`);
+            if (!Array.isArray(result)) throw new TypeError(`Unable to apply method "${method}" to a non-array (${typeof result})`);
 
             let write = true;
             let ret;
