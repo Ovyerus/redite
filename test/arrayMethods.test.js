@@ -96,42 +96,96 @@ describe('Redite array methods', () => {
         });
 
         describe('#remove', () => {
-            it('should remove all items with the same value', async () => {
-                await wrapper.test.set(RemoveArr);
-                await wrapper.test.remove(TestVal);
-                await expect(wrapper.test.get).to.become(RemoveArrRes);
+            describe('Native list', () => {
+                it('should remove all items with the same value', async () => {
+                    await wrapper.test.set(RemoveArr);
+                    await wrapper.test.remove(TestVal);
+                    await expect(wrapper.test.get).to.become(RemoveArrRes);
+                });
+
+                it('should ignore the invalid amount and remove all items with the same value', async () => {
+                    await wrapper.test.set(RemoveArr);
+                    await wrapper.test.remove(TestVal, 'foo');
+                    await expect(wrapper.test.get).to.become(RemoveArrRes);
+                });
+
+                it('should remove the first 2 items with the same value', async () => {
+                    await wrapper.test.set(RemoveArr);
+                    await wrapper.test.remove(TestVal, 2);
+                    await expect(wrapper.test.get).to.become([
+                        'safe', 'safe', 'safe', TestVal, 'safe'
+                    ]);
+                });
+
+                it('should remove the last 2 items with the same value', async () => {
+                    await wrapper.test.set(RemoveArr);
+                    await wrapper.test.remove(TestVal, -2);
+                    await expect(wrapper.test.get).to.become([
+                        'safe', TestVal, 'safe', 'safe', 'safe'
+                    ]);
+                });
             });
 
-            it('should ignore the invalid amount and remove all items with the same value', async () => {
-                await wrapper.test.set(RemoveArr);
-                await wrapper.test.remove(TestVal, 'foo');
-                await expect(wrapper.test.get).to.become(RemoveArrRes);
-            });
+            describe('Nested array', () => {
+                it('should throw an error if not given an item to remove', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await expect(wrapper.test.foo.remove()).to.be.rejectedWith(Error, 'You must provide an item to remove');
+                });
 
-            it('should remove the first 2 items with the same value', async () => {
-                await wrapper.test.set(RemoveArr);
-                await wrapper.test.remove(TestVal, 2);
-                await expect(wrapper.test.get).to.become([
-                    'safe', 'safe', 'safe', TestVal, 'safe'
-                ]);
-            });
+                it('should remove all items with the same value', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await wrapper.test.foo.remove(TestVal);
+                    await expect(wrapper.test.foo.get).to.become(RemoveArrRes);
+                });
 
-            it('should remove the last 2 items with the same value', async () => {
-                await wrapper.test.set(RemoveArr);
-                await wrapper.test.remove(TestVal, -2);
-                await expect(wrapper.test.get).to.become([
-                    'safe', TestVal, 'safe', 'safe', 'safe'
-                ]);
+                it('should ignore the invalid amount and remove all items with the same value', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await wrapper.test.foo.remove(TestVal, 'foo');
+                    await expect(wrapper.test.foo.get).to.become(RemoveArrRes);
+                });
+
+                it('should remove the first 2 items with the same value', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await wrapper.test.foo.remove(TestVal, 2);
+                    await expect(wrapper.test.foo.get).to.become([
+                        'safe', 'safe', 'safe', TestVal, 'safe'
+                    ]);
+                });
+
+                it('should remove the last 2 items with the same value', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await wrapper.test.foo.remove(TestVal, -2);
+                    await expect(wrapper.test.foo.get).to.become([
+                        'safe', TestVal, 'safe', 'safe', 'safe'
+                    ]);
+                });
             });
         });
 
         describe('.removeIndex', () => {
-            it('should only remove the value at the given index', async () => {
-                await wrapper.test.set(RemoveArr);
-                await wrapper.test.removeIndex(2);
-                await expect(wrapper.test.get).to.become([
-                    'safe', TestVal, TestVal, 'safe', TestVal, 'safe'
-                ]);
+            describe('Native list', () => {
+                it('should only remove the value at the given index', async () => {
+                    await wrapper.test.set(RemoveArr);
+                    await wrapper.test.removeIndex(2);
+                    await expect(wrapper.test.get).to.become([
+                        'safe', TestVal, TestVal, 'safe', TestVal, 'safe'
+                    ]);
+                });
+            });
+
+            describe('Nested array', () => {
+                it('should throw an error when not given an index to remove', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await expect(wrapper.test.foo.removeIndex()).to.be.rejectedWith(Error, 'You must provide an index to remove');
+                });
+
+                it('should only remove the value at the given index', async () => {
+                    await wrapper.test.foo.set(RemoveArr);
+                    await wrapper.test.foo.removeIndex(2);
+                    await expect(wrapper.test.foo.get).to.become([
+                        'safe', TestVal, TestVal, 'safe', TestVal, 'safe'
+                    ]);
+                });
             });
         });
     });
