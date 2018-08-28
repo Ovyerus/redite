@@ -1,21 +1,19 @@
 # redite
-[![Maintainability](https://img.shields.io/codeclimate/maintainability/Ovyerus/redite.svg)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
-[![Test Coverage](https://img.shields.io/codeclimate/c/Ovyerus/redite.svg)](https://codeclimate.com/github/Ovyerus/redite/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/maintainability)](https://codeclimate.com/github/Ovyerus/redite/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/c7a9f823af212f693319/test_coverage)](https://codeclimate.com/github/Ovyerus/redite/test_coverage)
 [![Build Status](https://travis-ci.org/Ovyerus/redite.svg?branch=master)](https://travis-ci.org/Ovyerus/redite)  
-[![NPM Downloads](https://img.shields.io/npm/dt/redite.svg)](https://npmjs.com/package/redite)
 [![NPM Version](https://img.shields.io/npm/v/redite.svg)](https://npmjs.com/package/redite)
-
-
-(Named after the mineral [Reidite](https://en.wikipedia.org/wiki/Reidite))  
-Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
+![Node Version](https://img.shields.io/node/v/redite.svg)
+ 
+Redite is a [Redis](https://redis.io/) wrapper for Node.JS using ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
 
 ## Differences to Rebridge
  - Uses native Redis data types instead of a single hash (ie. lists for arrays, hashs for objects).
- - No synchronous capabilities.
+ - No "synchronous" capabilities.
  - Allows access to internal objects such as the internal Redis connection.
  - Minimal dependencies (only relies on node_redis).
  - Automatically creates an object tree when setting.
- - Array helper methods which can mutate the array in the database.
+ - Array methods which can mutate objects in-database.
 
 ## Installation
 ```
@@ -28,12 +26,11 @@ const Redite = require('redite');
 const db = new Redite(); // If not passed a Redis connection to piggyback off of, it'll make its own.
                          // You can also pass a `url` parameter to the options object to connect using a Redis URL.
 
-db.users[0].set({
-    username: 'Ovyerus',
-    email: 'Ovyerus@users.noreply.github.com'
-}).then(() => db.users.get).then(([me]) => console.log('Me:', me)).catch(err => {
-    console.error('An error occurred:', err);
-});
+await db.users.ovyerus.set({id: '1', email: 'Ovyerus@users.noreply.github.com'});
+const me = await db.users.ovyerus();
+
+console.log(me.id); // 1
+console.log(me.email); // Ovyerus@users.noreply.github.com
 ```
 
 With a user-made Redis connection.
@@ -44,12 +41,16 @@ const Redite = require('redite');
 const client = redis.createClient();
 const db = new Redite({client});
 
-client.hset('users', 'ovyerus', 'Ovyerus@users.noreply.github.com', err => {
-    if (err) return console.error('An error occurred:', err);
+client.hset('users', 'ovyerus', JSON.stringify({
+    id: '1',
+    email: 'Ovyerus@users.noreply.github.com'
+}), async err => {
+    if (err) throw err;
 
-    db.users.ovyerus.get.then(result => {
-        console.log('My email:', result);
-    }).catch(err => console.error('An error occurred:', err));
+    const me = await db.users.ovyerus();
+
+    console.log(me.id); // 1
+    console.log(me.email); // Ovyerus@users.noreply.github.com
 });
 ```
 
@@ -60,47 +61,43 @@ client.hset('users', 'ovyerus', 'Ovyerus@users.noreply.github.com', err => {
 
 
 #### **Properties**
-| Name          | Type              | Description                                                       |
-| ------------- | ----------------- | ----------------------------------------------------------------- |
-| _redis        | redis.RedisClient | The Redis connection that gets piggybacked by the wrapper.        |
-| _serialise    | Function          | Function used to serialise data for Redis.                        |
-| _parse        | Function          | Function used to parse data from Redis.                           |
-| _deleteString | String            | String used as a temporary placeholder when deleting list values. |
+| Name | Type | Description |
+| --- | --- | --- |
+| _redis | redis.RedisClient | The Redis connection that gets piggybacked by the wrapper. |
+| _serialise | Function | Function used to serialise data for Redis. |
+| _parse | Function | Function used to parse data from Redis. |
+| _deleteString | String | String used as a temporary placeholder when deleting list values. |
 
 
 #### **Constructor**  
 `new Redite([options])`
 
-| Name                          | Type              | Default                                  | Description                                                                                                   |
-| ----------------------------- | ----------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| options.client                | redis.RedisClient | `redis.createClient({url: options.url})` | The Redis connection to piggyback off of.                                                                     |
-| options.url                   | String            |                                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.                |
-| options.serialise             | Function          | `JSON.stringify`                         | Function that takes in a JS object and returns a string that can be sent to Redis.                            |
-| options.parse                 | Function          | `JSON.parse`                             | Function that takes in a string and returns the JS object that it represents.                                 |
-| options.deleteString          | String            | `@__DELETED__@`                          | String to use as a temporary placeholder when deleting root indexes in a list.                                |
-| options.unref                 | Boolean           | `true`                                   | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.             |
-| options.customInspection      | Boolean           | `false`                                  | Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data. |
-| options.ignoreUndefinedValues | Boolean           | `false`                                  | Whether to ignore `undefined` as a base value when setting values.                                            |
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| options.client | redis.RedisClient | `redis.createClient({url: options.url})` | The Redis connection to piggyback off of. |
+| options.url | String | | The Redis URL to use for the automatically created connection. Not used if a client is passed. |
+| options.serialise | Function | `JSON.stringify` | Function that takes in a JS object and returns a string that can be sent to Redis. |
+| options.parse | Function | `JSON.parse` | Function that takes in a string and returns the JS object that it represents. |
+| options.deleteString | String | `@__DELETED__@` | String to use as a temporary placeholder when deleting root indexes in a list. |
+| options.unref | Boolean | `true` | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle. |
+| options.customInspection | Boolean | `false` | Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data. |
+| options.ignoreUndefinedValues | Boolean | `false` | Whether to ignore `undefined` as a base value when setting values. |
 #### **Accessing Objects**
 To get an object using Redite, you just write a tree as if you were accessing a regular object,
-however you must end it with `.get` or `._promise` (latter provided for compatibility with Rebridge).  
+however you must end it as if you were calling a function, that is `db.foo()`.
 The tree can be as long as you wish, however it should be an object that exists in Redis.  
 Example:
 ```js
 const db = new Redite();
 
-db.foo.bar.fizz.buzz.get.then(result => {
-    // ...
-}).catch(console.error);
+const result = await db.foo.bar.fizz.buzz();
 ```
 
 This also works for arrays:
 ```js
 const db = new Redite();
 
-db.foo[0].bar[1]._promise.then(result => {
-    // ...
-}).catch(console.error);
+const result = await db.foo[0].bar[1]();
 ```
 
 #### **Setting Values**
@@ -114,21 +111,19 @@ Example:
 ```js
 const db = new Redite();
 
-db.foo.bar.fizz.buzz.set('What a lovely day!').then(() => {
-    return Promise.all([db.foo.bar.fizz.buzz.get, db.foo.bar.fizz.get]);
-}).then(result => {
-    console.log(result); // ["What a lovely day!", {buzz: "What a lovely day!"}];
-});
+await db.foo.bar.fizz.buzz.set('What a lovely day!');
+const result = await Promise.all([db.foo.bar.fizz.buzz(), db.foo.bar.fizz()]);
+
+console.log(result); // ["What a lovely day!", {buzz: "What a lovely day!"}];
 ```
 
 ```js
 const db = new Redite();
 
-db.foo[0].bar[1].set('What a lovely day!').then(() => {
-    return Promise.all([db.foo[0].bar[1].get, db.foo[0].bar]);
-}).then(result => {
-    console.log(result) // ["What a lovely day!", [null, "What a lovely day!"]];
-});
+await db.foo[0].bar[1].set('What a lovely day!');
+const result = await Promise.all([[db.foo[0].bar[1](), db.foo[0].bar()]);
+
+console.log(result) // ["What a lovely day!", [null, "What a lovely day!"]];
 ```
 
 #### **Other Methods**
@@ -139,14 +134,13 @@ There is also `.exists` which is an alias for `.has`, which makes more sense whe
 ```js
 const db = new Redite();
 
-db.foo.bar.fizz.buzz.set('Hello world!').then(() => {
-    return db.foo.has('bar');
-}).then(exists => {
-    console.log(exists); // true
-    return db.foo.bar.delete('fizz');
-}).then(() => db.foo.bar.exists()).then(exists => {
-    console.log(exists) // false;
-}).catch(console.error);
+await db.foo.bar.fizz.buzz.set('Hello world!');
+const firstExists = await db.foo.has('bar');
+console.log(firstExists); // true
+
+await db.foo.bar.delete('fizz');
+const secondExists = await db.foo.bar.exists();
+console.log(secondExists); // false
 ```
 
 `.has` and `.delete` are also the only methods that can be run on the main Redite object.
@@ -154,14 +148,18 @@ db.foo.bar.fizz.buzz.set('Hello world!').then(() => {
 ```js
 const db = new Redite();
 
-db.foo.set('Hello world!').then(() => db.has('foo')).then(exists => {
-    console.log(exists); // true
-    return db.delete('foo');
-}).then(() => db.has('foo')).then(exists => {
-    console.log(exists); // false
-}).catch(console.error);
+await db.foo.set('Hello world!')l
+const firstExists = db.has('foo');
+console.log(firstExists); // true
+
+await db.delete('foo');
+const secondExists = await db.has('foo');
+console.log(secondExists); // falses
 ```
 
 #### **Working with Arrays**
 Redite has support for several methods that help when working with arrays.  
 Documentation for these is available [here](./ARRAY_METHODS.md).
+
+## Licence
+The code contained within this repository is licenced under the MIT License. See [LICENSE](/LICENSE) for more information.
