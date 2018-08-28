@@ -1,9 +1,7 @@
 env:
   global:
     - CC_TEST_REPORTER_ID=e5a1025a828b07fc2e20ab7d91679ac6d07283e3d3a7714019d0bfd9e4a8ac05
-cache:
-  directories:
-    - "node_modules"
+cache: yarn
 services:
   - "redis-server"
 language: node_js
@@ -14,7 +12,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script:
-  - npm run coverage
-  - npm test
+  - yarn lint
+  - yarn coverage
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
