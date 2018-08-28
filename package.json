@@ -4,8 +4,8 @@
     "description": "A Redis wrapper using ES6 Proxies.",
     "main": "index.js",
     "types": "index.d.ts",
-    "directories": {
-        "test": "test"
+    "engines": {
+        "node": ">=8.0.0"
     },
     "scripts": {
         "test": "mocha",
