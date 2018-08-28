@@ -6,18 +6,16 @@ const {SupportedArrayMethods} = require('./Constants');
 class ChildWrapper {
     /**
      * Makes a new ChildWrapper.
-     * 
+     *
      * @param {Redite} parentObj Parent Redite instance to use methods from.
      * @param {String} parentKey Current top most key.
      * @param {String[]} [stack=[]] Lower level keys, starting with the root key.
      */
     constructor(parentObj, parentKey, stack=[]) {
-        return new Proxy(this, {
+        return new Proxy(() => this, {
             get(obj, key) {
-                // Returns a Promise which should resolve with the stored value.
-                if (['get', '_promise'].includes(key)) {
-                    if (!stack.length) return parentObj.getStack(parentKey, []);
-                    else return parentObj.getStack(stack.shift(), stack.concat(parentKey));
+                if (key === 'get' || key === '_promise') {
+                    throw new Error('Using .get or ._promise to get objects is deprecated. Please the new calling syntax (db.foo.bar())');
                 }
 
                 // Allow access to the key stack (primarily exposed for tests).
@@ -45,6 +43,11 @@ class ChildWrapper {
                 return new ChildWrapper(parentObj, key, stack.concat(parentKey));
             },
 
+            apply() {
+                if (!stack.length) return parentObj.getStack(parentKey, []);
+                else return parentObj.getStack(stack.shift(), stack.concat(parentKey));
+            },
+
             /*
                Throw errors for other methods, as there are special keys that are used for these instead, since this is entirely async.
             */
@@ -60,6 +63,12 @@ class ChildWrapper {
                 throw new Error('ChildWrapper does not support deletion (delete foo.bar)');
             }
         });
+    }
+
+    // Couldn't figure out any other way to get instanceof to work properly :/
+    // If you know a better way, please make a PR or open an issue.
+    static [Symbol.hasInstance](inst) {
+        return inst instanceof Function;
     }
 }
 

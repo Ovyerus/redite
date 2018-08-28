@@ -27,6 +27,70 @@ beforeEach(() => flushdb());
 after(() => flushdb());
 
 describe('ChildWrapper', () => {
+    describe('apply trap', () => {
+        it('should return a promise', () => {
+            expect(wrapper.foo()).to.be.instanceOf(Promise);
+        });
+
+        describe('Regular values', () => {
+            it('should get the value specified', async () => {
+                await set('test', '"ChildWrapper get test"');
+                await expect(wrapper.test()).to.become('ChildWrapper get test');
+            });
+        });
+
+        describe('Hashmaps', () => {
+            it('should get the value from within the hashmap', async () => {
+                await hset('test', 'foo', '"ChildWrapper get hash test"');
+                await expect(wrapper.test.foo()).to.become('ChildWrapper get hash test');
+            });
+
+            it('should get the deeply nested value', async () => {
+                await hset('test', 'foo', JSON.stringify(TestHash));
+                await expect(wrapper.test.foo.TestHash()).to.become(TestVal);
+            });
+
+            it('should get the really deeply nested value', async () => {
+                await hset('test', 'foo', JSON.stringify(DeepHash));
+                await expect(wrapper.test.foo.bar.baz.foobar.TestHash()).to.become(TestVal);
+            });
+
+            it('should get all the values of the hash', async () => {
+                await hset('test', 'foo', '"ChildWrapper get hash test 1"');
+                await hset('test', 'bar', '"ChildWrapper get hash test 2"');
+                await expect(wrapper.test()).to.become({
+                    foo: 'ChildWrapper get hash test 1',
+                    bar: 'ChildWrapper get hash test 2'
+                });
+            });
+        });
+
+        describe('Lists', () => {
+            it('should get the value from within the list', async () => {
+                await rpush('test', '"ChildWrapper get list test"');
+                await expect(wrapper.test[0]()).to.become('ChildWrapper get list test');
+            });
+
+            it('should get the deeply nested value', async () => {
+                await rpush('test', JSON.stringify(TestHash));
+                await expect(wrapper.test[0].TestHash()).to.become(TestVal);
+            });
+
+            it('should get the really deeply nested value', async () => {
+                await rpush('test', JSON.stringify({foo: DeepHash}));
+                await expect(wrapper.test[0].foo.bar.baz.foobar.TestHash()).to.become(TestVal);
+            });
+
+            it('should get all the values of the list', async () => {
+                await rpush('test', '"ChildWrapper get list test 1"', '"ChildWrapper get list test 2"');
+                await expect(wrapper.test()).to.become([
+                    'ChildWrapper get list test 1',
+                    'ChildWrapper get list test 2'
+                ]);
+            });
+        });
+    });
+
     describe('get trap', () => {
         describe('any key', () => {
             it('should return another ChildWrapper with an extended', () => {
@@ -45,66 +109,8 @@ describe('ChildWrapper', () => {
         });
 
         describe('#get', () => {
-            it('should return a promise', () => {
-                expect(wrapper.foo.get).to.be.instanceOf(Promise);
-            });
-
-            describe('Regular values', () => {
-                it('should get the value specified', async () => {
-                    await set('test', '"ChildWrapper get test"');
-                    await expect(wrapper.test.get).to.become('ChildWrapper get test');
-                });
-            });
-
-            describe('Hashmaps', () => {
-                it('should get the value from within the hashmap', async () => {
-                    await hset('test', 'foo', '"ChildWrapper get hash test"');
-                    await expect(wrapper.test.foo.get).to.become('ChildWrapper get hash test');
-                });
-
-                it('should get the deeply nested value', async () => {
-                    await hset('test', 'foo', JSON.stringify(TestHash));
-                    await expect(wrapper.test.foo.TestHash.get).to.become(TestVal);
-                });
-
-                it('should get the really deeply nested value', async () => {
-                    await hset('test', 'foo', JSON.stringify(DeepHash));
-                    await expect(wrapper.test.foo.bar.baz.foobar.TestHash.get).to.become(TestVal);
-                });
-
-                it('should get all the values of the hash', async () => {
-                    await hset('test', 'foo', '"ChildWrapper get hash test 1"');
-                    await hset('test', 'bar', '"ChildWrapper get hash test 2"');
-                    await expect(wrapper.test.get).to.become({
-                        foo: 'ChildWrapper get hash test 1',
-                        bar: 'ChildWrapper get hash test 2'
-                    });
-                });
-            });
-
-            describe('Lists', () => {
-                it('should get the value from within the list', async () => {
-                    await rpush('test', '"ChildWrapper get list test"');
-                    await expect(wrapper.test[0].get).to.become('ChildWrapper get list test');
-                });
-
-                it('should get the deeply nested value', async () => {
-                    await rpush('test', JSON.stringify(TestHash));
-                    await expect(wrapper.test[0].TestHash.get).to.become(TestVal);
-                });
-
-                it('should get the really deeply nested value', async () => {
-                    await rpush('test', JSON.stringify({foo: DeepHash}));
-                    await expect(wrapper.test[0].foo.bar.baz.foobar.TestHash.get).to.become(TestVal);
-                });
-
-                it('should get all the values of the list', async () => {
-                    await rpush('test', '"ChildWrapper get list test 1"', '"ChildWrapper get list test 2"');
-                    await expect(wrapper.test.get).to.become([
-                        'ChildWrapper get list test 1',
-                        'ChildWrapper get list test 2'
-                    ]);
-                });
+            it('should throw an error', () => {
+                expect(() => wrapper.foo.get).to.throw(Error, 'Using .get or ._promise to get objects is deprecated. Please the new calling syntax (db.foo.bar())');
             });
         });
 
@@ -115,44 +121,44 @@ describe('ChildWrapper', () => {
 
             it('should set the value of the given key', async () => {
                 await wrapper.test.set('ChildWrapper set test');
-                await expect(wrapper.test.get).to.become('ChildWrapper set test');
+                await expect(wrapper.test()).to.become('ChildWrapper set test');
             });
 
             it('should set a hashmap', async () => {
                 await wrapper.test.set(TestHash);
                 await expect(type('test')).to.become('hash');
-                await expect(wrapper.test.TestHash.get).to.become(TestVal);
+                await expect(wrapper.test.TestHash()).to.become(TestVal);
             });
 
             it('should set a list', async () => {
                 await wrapper.test.set(TestList);
                 await expect(type('test')).to.become('list');
-                await expect(wrapper.test[0].get).to.become(TestVal);
+                await expect(wrapper.test[0]()).to.become(TestVal);
             });
 
             it('should set a deeply nested object, with the first as a hash', async () => {
                 await wrapper.test.foo.bar.foobar.set(TestHash);
                 await expect(type('test')).to.become('hash');
-                await expect(wrapper.test.foo.bar.foobar.TestHash.get).to.become(TestVal);
+                await expect(wrapper.test.foo.bar.foobar.TestHash()).to.become(TestVal);
             });
 
             it('should set a deeply nested array, with the first as a list', async () => {
                 await wrapper.test[0].foo[0].bar.set(TestList);
                 await expect(type('test')).to.become('list');
-                await expect(wrapper.test[0].foo[0].bar[0].get).to.become(TestVal);
+                await expect(wrapper.test[0].foo[0].bar[0]()).to.become(TestVal);
             });
 
             it('should set a hash with a placeholder value if given an empty object', async () => {
                 await wrapper.test.set({});
                 await expect(exists('test')).to.eventually.be.ok;
-                await expect(wrapper.test.get).to.become({
+                await expect(wrapper.test()).to.become({
                     __setting_empty_hash__: '__setting_empty_hash__'
                 });
             });
 
             it('should set an empty object on a deeply nessted object when given an empty object', async () => {
                 await wrapper.test.foo.bar.foobar.set({});
-                await expect(wrapper.test.foo.bar.foobar.get).to.become({});
+                await expect(wrapper.test.foo.bar.foobar()).to.become({});
             });
 
             it('should not set anything if given an empty array', async () => {
@@ -163,7 +169,7 @@ describe('ChildWrapper', () => {
             it('should edit an object tree without overriding any parts of it', async () => {
                 await wrapper.test.foo.bar.set(TestHash);
                 await wrapper.test.foo.TestHash.set(TestVal);
-                await expect(wrapper.test.get).to.become({
+                await expect(wrapper.test()).to.become({
                     foo: {
                         bar: TestHash,
                         ...TestHash
@@ -174,7 +180,7 @@ describe('ChildWrapper', () => {
             it('should edit an item in a list without overriding any parts of it', async () => {
                 await wrapper.test[0].foo.bar.set(TestHash);
                 await wrapper.test[0].foo.TestHash.set(TestVal);
-                await expect(wrapper.test[0].get).to.become({
+                await expect(wrapper.test[0]()).to.become({
                     foo: {
                         bar: TestHash,
                         ...TestHash
@@ -185,7 +191,7 @@ describe('ChildWrapper', () => {
             it('should edit an object tree and generate a tree along the way, without overriding any original parts', async () => {
                 await wrapper.test.foo.bar.set(TestHash);
                 await wrapper.test.foo.fuzz[0].buzz.set(TestHash);
-                await expect(wrapper.test.get).to.become({
+                await expect(wrapper.test()).to.become({
                     foo: {
                         bar: TestHash,
                         fuzz: [
@@ -200,7 +206,7 @@ describe('ChildWrapper', () => {
             it('should edit an item in a list and generate a tree along the way, without overriding any original parts', async () => {
                 await wrapper.test[0].foo.bar.set(TestHash);
                 await wrapper.test[0].foo.fuzz[0].buzz.set(TestHash);
-                await expect(wrapper.test[0].get).to.become({
+                await expect(wrapper.test[0]()).to.become({
                     foo: {
                         bar: TestHash,
                         fuzz: [
