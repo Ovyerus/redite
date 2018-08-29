@@ -1,21 +1,31 @@
 import {RedisClient} from 'redis';
 
-declare module 'redite' {
-    type MutatingMethod = 'push' | 'remove' | 'removeIndex' | 'pop' | 'shift' | 'unshift'
-    type NonMutatingMethod = 'concat' | 'find' | 'findIndex' | 'includes' | 'indexOf' | 'lastIndexOf' | 'map' | 'length' | 'filter' | 'join' | 'forEach'
-    type SupportedArrayMethod = MutatingMethod | NonMutatingMethod;
-    
-    interface ArrayMethods {
-        MUTATING_METHODS: MutatingMethod[],
-        NONMUTATING_METHODS: NonMutatingMethod[],
-        SUPPORTED_ARRAY_METHODS: SupportedArrayMethod[]
-    }
-    
-    export const ARRAY_METHODS: ArrayMethods;
-    
-    export class ChildWrapper {
-        get: Promise<any>;
-        _promise: Promise<any>;
+type MutatingMethod = 'push' | 'remove' | 'removeIndex' | 'pop' | 'shift' | 'unshift';
+type NonMutatingMethod = 'concat' | 'find' | 'findIndex' | 'includes' | 'indexOf' | 'lastIndexOf' | 'map' | 'length' | 'filter' | 'join' | 'forEach';
+type SupportedArrayMethod = MutatingMethod | NonMutatingMethod;
+
+interface Constants {
+    MutatingMethod: MutatingMethod[],
+    NonMutatingMethod: NonMutatingMethod[],
+    SupportedArrayMethod: SupportedArrayMethod[]
+}
+
+interface RediteOptions {
+    client?: RedisClient;
+    url?: string;
+    serialise?: (value: any) => string;
+    parse?: (value: string) => any;
+    deletedString?: string;
+    unref?: boolean;
+    customInspection?: boolean;
+    ignoreUndefinedValues?: boolean;
+}
+
+declare function r(options?: RediteOptions): r.Redite;
+
+declare namespace r {
+    interface ChildWrapper {
+        (): Promise<any>;
         _stack: string[];
 
         new(parentObj: Redite, parentKey: string, stack?: string[]);
@@ -49,18 +59,7 @@ declare module 'redite' {
         [key: number]: ChildWrapper | any;
     }
 
-    interface RediteOptions {
-        client?: RedisClient;
-        url?: string;
-        serialise?: (value: any) => string;
-        parse?: (value: string) => any;
-        deletedString?: string;
-        unref?: boolean;
-        customInspection?: boolean;
-        ignoreUndefinedValues?: boolean;
-    }
-
-    export default class Redite {
+    export class Redite {
         _redis: RedisClient;
         _serialise: (value: any) => string;
         _parse: (value: string) => any;
@@ -82,4 +81,9 @@ declare module 'redite' {
         [key: string]: ChildWrapper | any;
         [key: number]: ChildWrapper | any;
     }
+
+    export const Constants: Constants;
+    export const ChildWrapper: ChildWrapper;
 }
+
+export = r;
