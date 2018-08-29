@@ -3,7 +3,7 @@ env:
     - CC_TEST_REPORTER_ID=e5a1025a828b07fc2e20ab7d91679ac6d07283e3d3a7714019d0bfd9e4a8ac05
 cache: yarn
 services:
-  - "redis-server"
+  - redis-server
 language: node_js
 node_js:
   - "10"
@@ -13,6 +13,7 @@ before_script:
   - ./cc-test-reporter before-build
 script:
   - yarn lint
+  - yarn lint:ts
   - yarn coverage
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
