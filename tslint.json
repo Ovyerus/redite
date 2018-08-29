@@ -81,7 +81,7 @@
         "no-unnecessary-class": [true, "allow-empty-class", "allow-constructor-only", "allow-static-only"],
         "no-unsafe-any": false,
         "no-unsafe-finally": true,
-        "no-unused-expression": [true, "allow-fast-null-checks"],
+        "no-unused-expression": false,
         "no-var-keyword": true,
         "no-void-expression": [true, "ignore-arrow-function-shorthand"],
         "prefer-conditional-expression": [true, "check-else-if"],
