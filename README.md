@@ -5,10 +5,11 @@
 [![NPM Version](https://img.shields.io/npm/v/redite.svg)](https://npmjs.com/package/redite)
 ![Node Version](https://img.shields.io/node/v/redite.svg)
  
-Redite is a [Redis](https://redis.io/) wrapper for Node.JS using ES6 Proxies, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
+Redite is a [Redis](https://redis.io/) wrapper for Node.JS that uses [proxies](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to emulate accessing regular objects, similar to [Rebridge](https://github.com/CapacitorSet/rebridge).
 
 ## Differences to Rebridge
- - Uses native Redis data types instead of a single hash (ie. lists for arrays, hashs for objects).
+ - Uses native Redis data types where possible, instead of a single hash (e.g. lists for arrays, hashs for objects).
+ - Get syntax looks more like accessing a regular object (in async/await at least).
  - No "synchronous" capabilities.
  - Allows access to internal objects such as the internal Redis connection.
  - Minimal dependencies (only relies on node_redis).
@@ -23,11 +24,11 @@ npm install redite
 ## Usage
 ```js
 const Redite = require('redite');
-const db = new Redite(); // If not passed a Redis connection to piggyback off of, it'll make its own.
+const db = new Redite(); // If not passed a Redis connection to use, it'll make its own.
                          // You can also pass a `url` parameter to the options object to connect using a Redis URL.
 
 await db.users.ovyerus.set({id: '1', email: 'Ovyerus@users.noreply.github.com'});
-const me = await db.users.ovyerus();
+const me = await db.users.ovyerus;
 
 console.log(me.id); // 1
 console.log(me.email); // Ovyerus@users.noreply.github.com
@@ -47,7 +48,7 @@ client.hset('users', 'ovyerus', JSON.stringify({
 }), async err => {
     if (err) throw err;
 
-    const me = await db.users.ovyerus();
+    const me = await db.users.ovyerus;
 
     console.log(me.id); // 1
     console.log(me.email); // Ovyerus@users.noreply.github.com
@@ -83,53 +84,47 @@ client.hset('users', 'ovyerus', JSON.stringify({
 | options.customInspection | Boolean | `false` | Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data. |
 | options.ignoreUndefinedValues | Boolean | `false` | Whether to ignore `undefined` as a base value when setting values. |
 #### **Accessing Objects**
-To get an object using Redite, you just write a tree as if you were accessing a regular object,
-however you must end it as if you were calling a function, that is `db.foo()`.
-The tree can be as long as you wish, however it should be an object that exists in Redis.  
+To get an object using Redite, you just write it as if you were accessing a regular object. However, it has to end with `.then` or `.catch` due to promises (or you can use the shiny `await` syntax shown here). The object tree can be as long as you wish, however it should be an object that exists in Redis.  
 Example:
 ```js
 const db = new Redite();
 
-const result = await db.foo.bar.fizz.buzz();
+// Using async/await
+const result = await db.foo.bar.fizz.buzz;
+
+// Using regular promises.
+db.foo.bar.fizz.buzz.then(result => {
+    
+});
 ```
 
 This also works for arrays:
 ```js
-const db = new Redite();
-
-const result = await db.foo[0].bar[1]();
+const result = await db.foo[0].bar[1];
 ```
 
 #### **Setting Values**
-You can set values in the same fashion as getting them, however instead of returning a direct promise,
-it returns a function which must be passed the value to set.  
-There is no need to worry about creating a tree before hand, as Redite will automatically generate a tree based on the keys given.
+You can set values in the same fashion as getting them, however instead of returning a direct promise, it returns a function which must be passed the value to set. There is no need to worry about creating the objects before hand, as Redite will automatically generate one based on the keys given.
 
 *(Side note: any keys which imply an array is being accessed (numbers) will result in an array at that location instead of a regular object. If the number is not zero, there will be that amount of `null`s before it)*
 
 Example:
 ```js
-const db = new Redite();
+await db.foo.bar.fizz.buzz.set('Magic');
+const result = await Promise.all([db.foo.bar.fizz.buzz, db.foo.bar.fizz]);
 
-await db.foo.bar.fizz.buzz.set('What a lovely day!');
-const result = await Promise.all([db.foo.bar.fizz.buzz(), db.foo.bar.fizz()]);
-
-console.log(result); // ["What a lovely day!", {buzz: "What a lovely day!"}];
+console.log(result); // ["Magic", {buzz: "Magic"}];
 ```
 
 ```js
-const db = new Redite();
+await db.foo[0].bar[1].set('Magic');
+const result = await Promise.all([[db.foo[0].bar[1], db.foo[0].bar]);
 
-await db.foo[0].bar[1].set('What a lovely day!');
-const result = await Promise.all([[db.foo[0].bar[1](), db.foo[0].bar()]);
-
-console.log(result) // ["What a lovely day!", [null, "What a lovely day!"]];
+console.log(result) // ["Magic", [null, "Magic"]];
 ```
 
 #### **Other Methods**
-The library also has `.has` and `.delete` which work in the same fashion as `.set`, but check for existance or delete the tree, respectively.  
-If a key is not given to these methods, they will be applied to the last key before them.  
-There is also `.exists` which is an alias for `.has`, which makes more sense when not passing a key to it.
+The library also has `.has` and `.delete` which work in the same fashion as `.set`, but check for existance or delete the object respectively. If a key is not given to these methods, they will be applied to the last key before them. There is also `.exists` which is an alias for `.has`, which makes more sense when not passing a key to it.
 
 ```js
 const db = new Redite();
@@ -148,7 +143,7 @@ console.log(secondExists); // false
 ```js
 const db = new Redite();
 
-await db.foo.set('Hello world!')l
+await db.foo.set('Hello world!');
 const firstExists = db.has('foo');
 console.log(firstExists); // true
 
