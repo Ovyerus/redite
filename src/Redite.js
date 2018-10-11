@@ -22,32 +22,26 @@ function genTree(stack) {
     return ret;
 }
 
+/**
+ * Redis proxy wrapper.
+ *
+ * @prop {redis.RedisClient} _redis Internal Redis connection.
+ * @prop {Function} _serialise Data serialisation function.
+ * @prop {Function} _parse Data parser function.
+ * @prop {String} _deletedString Temporary string used when deleting items from a list.
+ * @prop {Boolean} _ignoreUndefinedValues Whether to ignore `undefined` when setting values.
+ * @prop {Boolean} _customInspection Whether to give a custom object for `util.inspect`.
+ */
 class Redite {
     constructor(options={}) {
         this._redis = options.client || redis.createClient({url: options.url});
         this._serialise = options.serialise || JSON.stringify;
         this._parse = options.parse || JSON.parse;
         this._deletedString = options.deletedString || '@__DELETED__@';
-        this._customInspection = options.customInspection || false;
         this._ignoreUndefinedValues = options.ignoreUndefinedValues || false;
+        this._customInspection = options.customInspection || false;
 
         if (options.unref) this._redis.unref(); // Lets Node exit if nothing is happening.
-        if (options.customInspection) {
-            this[util.inspect.custom] = () => {
-                let scope = this;
-
-                return new (class Redite {
-                    constructor() {
-                        this._redis = '<hidden>';
-                        this._serialise = scope._serialise;
-                        this._parse = scope._parse;
-                        this._deletedString = scope._deletedString;
-                        this._customInspection = scope._customInspection;
-                        this._ignoreUndefinedValues = scope._ignoreUndefinedValues;
-                    }
-                })();
-            };
-        }
 
         // (https://stackoverflow.com/a/40714458/8778928)
         return new Proxy(this, {
@@ -78,6 +72,24 @@ class Redite {
                 throw new Error('Redite does not support deletion (delete foo.bar)');
             }
         });
+    }
+
+    [util.inspect.custom]() {
+        if (!this._customInspection) return this;
+        else {
+            let scope = this;
+
+            return new (class Redite {
+                constructor() {
+                    this._redis = '<hidden>';
+                    this._serialise = scope._serialise;
+                    this._parse = scope._parse;
+                    this._deletedString = scope._deletedString;
+                    this._customInspection = scope._customInspection;
+                    this._ignoreUndefinedValues = scope._ignoreUndefinedValues;
+                }
+            })();
+        }
     }
 
     /**
