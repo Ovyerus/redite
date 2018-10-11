@@ -5,13 +5,13 @@
     },
 
     "parserOptions": {
-        "ecmaVersion": 8
+        "ecmaVersion": 9
     },
 
     "rules": {
         "no-console": 0,
         "global-require":"off",
-        
+
         "quotes": ["warn", "single", {"avoidEscape": true, "allowTemplateLiterals": true}],
         "semi": "warn",
         "indent": ["error", 4, {"SwitchCase": 1}],
