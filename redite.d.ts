@@ -24,9 +24,13 @@ interface RediteOptions {
 declare function r(options?: RediteOptions): r.Redite;
 
 declare namespace r {
+    // Needs to be an interface in order to have a callable type.
     interface ChildWrapper {
-        (): Promise<any>;
         _stack: string[];
+
+        finally(onfinally?: (() => void) | undefined | null): Promise<T>
+        then(onfulfilled?: ((value: any) => any) | undefined | null, onrejected?: ((reason: any) => any) | undefined | null): Promise<any>;
+        catch(onrejected?: ((reason: any) => any) | undefined | null): Promise<any>;
 
         new(parentObj: Redite, parentKey: string, stack?: string[]);
         set(value: any): Promise<void>;
