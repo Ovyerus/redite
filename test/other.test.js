@@ -43,9 +43,9 @@ describe('Extra coverage', () => {
         this.timeout(12000);
         this.slow(12000);
 
-        let child = fork(`${__dirname}/lib/unrefTest.js`);
+        const child = fork(`${__dirname}/lib/unrefTest.js`);
 
-        let timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             child.kill();
             done(new Error('Child process did not exit.'));
         }, 5000);
@@ -117,7 +117,7 @@ describe('Extra coverage', () => {
         });
 
         it('should have regular values, with `redis` set to "<hidden>"', () => {
-            let res = wrapper[custom]();
+            const res = wrapper[custom]();
 
             expect(res._redis).to.equal('<hidden>');
             expect(res._serialise).to.equal(wrapper._serialise);
@@ -125,6 +125,12 @@ describe('Extra coverage', () => {
             expect(res._deletedString).to.equal(wrapper._deletedString);
             expect(res._customInspection).to.equal(wrapper._customInspection);
             expect(res._ignoreUndefinedValues).to.equal(wrapper._ignoreUndefinedValues);
+        });
+
+        it('should return the regular Redite instance if disabled', () => {
+            const db = new Redite();
+
+            expect(db[custom]()).to.equal(db);
         });
     });
 });
