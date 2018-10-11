@@ -1,6 +1,6 @@
 {
     "name": "redite",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "description": "A wrapper for Redis using proxies to emulate regular objects.",
     "main": "index.js",
     "types": "redite.d.ts",
