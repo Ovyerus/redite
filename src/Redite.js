@@ -1,3 +1,5 @@
+require('./promisifyRedis');
+
 const redis = require('redis');
 const util = require('util');
 const {
