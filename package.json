@@ -1,7 +1,7 @@
 {
     "name": "redite",
     "version": "2.0.1",
-    "description": "A Redis wrapper using ES6 Proxies.",
+    "description": "A wrapper for Redis using proxies to emulate regular objects.",
     "main": "index.js",
     "types": "redite.d.ts",
     "engines": {
