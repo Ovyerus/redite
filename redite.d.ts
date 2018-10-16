@@ -28,7 +28,7 @@ declare namespace r {
     interface ChildWrapper {
         _stack: string[];
 
-        finally(onfinally?: (() => void) | undefined | null): Promise<T>
+        finally(onfinally?: (() => void) | undefined | null): Promise<any>
         then(onfulfilled?: ((value: any) => any) | undefined | null, onrejected?: ((reason: any) => any) | undefined | null): Promise<any>;
         catch(onrejected?: ((reason: any) => any) | undefined | null): Promise<any>;
 
