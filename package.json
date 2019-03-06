@@ -31,12 +31,12 @@
     },
     "homepage": "https://github.com/Ovyerus/redite#readme",
     "devDependencies": {
-        "@types/redis": "^2.8.6",
+        "@types/redis": "^2.8.10",
         "chai": "^4.1.2",
         "chai-as-promised": "^7.1.1",
-        "eslint": "^5.4.0",
-        "mocha": "^5.2.0",
-        "nyc": "^13.0.1"
+        "eslint": "^5.15.1",
+        "mocha": "^6.0.2",
+        "nyc": "^13.3.0"
     },
     "dependencies": {
         "redis": "^2.8.0"
