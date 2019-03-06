@@ -151,7 +151,7 @@ class Redite {
 
         const client = this._redis;
         const stackOneKey = stack.length === 1;
-        const isObj = typeof value === 'object' && value.constructor === Object;
+        const isObj = value && typeof value === 'object' && value.constructor === Object;
 
         if (Array.isArray(value) && value.length && stackOneKey) {
             await client.pdel(stack[0]);
