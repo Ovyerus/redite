@@ -2,14 +2,16 @@
 
 const {expect, use} = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const redis = require('redis');
+const redis = require('redis-mock');
 const Redite = require('../');
+const promisifyRedisClient = require('../src/promisifyRedis');
 const {
     promisify,
     DB
 } = require('./lib/consts');
 
 use(chaiAsPromised);
+promisifyRedisClient(redis.RedisClient.prototype);
 
 const client = redis.createClient({db: DB});
 const wrapper = new Redite({client});
