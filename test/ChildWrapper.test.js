@@ -175,11 +175,8 @@ describe('ChildWrapper', () => {
             });
 
             it.only('should edit an item in a list without overriding any parts of it', async () => {
-                console.log('1');
                 await wrapper.test[0].foo.bar.set(TestHash);
-                console.log('2');
                 await wrapper.test[0].foo.TestHash.set(TestVal);
-                console.log('3');
                 await expect(wrapper.test[0]).to.become({
                     foo: {
                         bar: TestHash,
