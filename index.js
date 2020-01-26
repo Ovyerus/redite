@@ -3,7 +3,7 @@ const Redite = require('./src/Redite');
 const ChildWrapper = require('./src/ChildWrapper');
 
 function r(options) {
-    return new Redite(options);
+  return new Redite(options);
 }
 
 r.Redite = Redite;

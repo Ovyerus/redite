@@ -1,54 +1,62 @@
 {
-    "name": "redite",
-    "version": "3.0.2",
-    "description": "A wrapper for Redis using proxies to emulate regular objects.",
-    "main": "index.js",
-    "types": "redite.d.ts",
-    "engines": {
-        "node": ">=8.0.0"
-    },
-    "scripts": {
-        "test": "mocha",
-        "coverage": "nyc mocha",
-        "lint": "eslint ."
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Ovyerus/redite.git"
-    },
-    "keywords": [
-        "redite",
-        "redis",
-        "database",
-        "es6",
-        "proxies",
-        "proxy"
+  "name": "redite",
+  "version": "3.0.2",
+  "description": "A wrapper for Redis using proxies to emulate regular objects.",
+  "main": "index.js",
+  "types": "redite.d.ts",
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "scripts": {
+    "test": "mocha",
+    "coverage": "nyc mocha",
+    "lint": "eslint . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ovyerus/redite.git"
+  },
+  "keywords": [
+    "redite",
+    "redis",
+    "database",
+    "es6",
+    "proxies",
+    "proxy"
+  ],
+  "author": "Ovyerus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ovyerus/redite/issues"
+  },
+  "homepage": "https://github.com/Ovyerus/redite#readme",
+  "devDependencies": {
+    "@types/redis": "^2.8.14",
+    "@typescript-eslint/eslint-plugin": "2.3.1",
+    "@typescript-eslint/parser": "2.3.1",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^6.8.0",
+    "eslint-config-clarity": "0.2.13",
+    "eslint-plugin-import": "2.18.2",
+    "eslint-plugin-prettier": "3.1.1",
+    "eslint-plugin-react": "7.14.3",
+    "eslint-plugin-react-hooks": "2.0.1",
+    "mocha": "^7.0.0",
+    "nyc": "^15.0.0",
+    "prettier": "1.18.2"
+  },
+  "dependencies": {
+    "redis": "^2.8.0"
+  },
+  "nyc": {
+    "reporter": [
+      "text-summary",
+      "html",
+      "lcov"
     ],
-    "author": "Ovyerus",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/Ovyerus/redite/issues"
-    },
-    "homepage": "https://github.com/Ovyerus/redite#readme",
-    "devDependencies": {
-        "@types/redis": "^2.8.10",
-        "chai": "^4.1.2",
-        "chai-as-promised": "^7.1.1",
-        "eslint": "^5.15.1",
-        "mocha": "^6.0.2",
-        "nyc": "^13.3.0"
-    },
-    "dependencies": {
-        "redis": "^2.8.0"
-    },
-    "nyc": {
-        "reporter": [
-            "text-summary",
-            "html",
-            "lcov"
-        ],
-        "exclude": [
-            "test/"
-        ]
-    }
+    "exclude": [
+      "test/"
+    ]
+  }
 }
