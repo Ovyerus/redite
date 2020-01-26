@@ -2,7 +2,7 @@
 
 const { expect, use } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const redis = require('redis');
+const Redis = require('ioredis');
 
 const {
   inspect: { custom }
@@ -11,28 +11,26 @@ const { fork } = require('child_process');
 
 const Redite = require('../');
 
-const { promisify, DB, TestHash } = require('./lib/consts');
+const { db, TestHash } = require('./lib/consts');
 
 use(chaiAsPromised);
 
-const client = redis.createClient({ db: DB });
+const client = new Redis({ db });
 const wrapper = new Redite({
   client,
   customInspection: true,
   ignoreUndefinedValues: true
 });
 
-const flushdb = promisify(client.flushdb, client);
-
-beforeEach(() => flushdb());
-after(() => flushdb());
+beforeEach(() => client.flushdb());
+after(() => client.flushdb());
 
 describe('Extra coverage', () => {
   it('should auto-gen settings when not given anything', () => {
     /* eslint-disable no-unused-expressions */
     const db = new Redite();
 
-    expect(db._redis).to.be.instanceof(redis.RedisClient);
+    expect(db._redis).to.be.instanceof(Redis);
     expect(db._serialise).to.equal(JSON.stringify);
     expect(db._parse).to.equal(JSON.parse);
     expect(db._deletedString).to.equal('@__DELETED__@');

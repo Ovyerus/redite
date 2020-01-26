@@ -1,19 +1,4 @@
-function promisify(func, thisArg) {
-  return function(...args) {
-    return new Promise((resolve, reject) => {
-      func.apply(thisArg, [
-        ...args,
-        (err, ...res) => {
-          if (err) reject(err);
-          else if (res.length <= 1) resolve(res[0]);
-          else resolve(res);
-        }
-      ]);
-    });
-  };
-}
-
-const DB = 15;
+const db = 15;
 const TestVal = 'test';
 const TestHash = { TestHash: TestVal };
 const TestList = [TestVal];
@@ -121,8 +106,7 @@ const NonMutatingTests = {
 };
 
 module.exports = {
-  promisify,
-  DB,
+  db,
   TestVal,
   TestHash,
   TestList,

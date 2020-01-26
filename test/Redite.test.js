@@ -2,27 +2,24 @@
 
 const { expect, use } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const redis = require('redis');
+const Redis = require('ioredis');
 
 const Redite = require('../');
 
-const { promisify, DB } = require('./lib/consts');
+const { db } = require('./lib/consts');
 
 use(chaiAsPromised);
 
-const client = redis.createClient({ db: DB });
+const client = new Redis({ db });
 const wrapper = new Redite({ client });
 
-const flushdb = promisify(client.flushdb, client);
-const set = promisify(client.set, client);
-
-beforeEach(() => flushdb());
-after(() => flushdb());
+beforeEach(() => client.flushdb());
+after(() => client.flushdb());
 
 describe('Redite', () => {
   describe('get trap', () => {
     it('should enable access to object properties', () => {
-      expect(wrapper._redis).to.be.instanceof(redis.RedisClient);
+      expect(wrapper._redis).to.be.instanceof(Redis);
       expect(wrapper._serialise).to.be.a('function');
       expect(wrapper._parse).to.be.a('function');
       expect(wrapper._deletedString).to.be.a('string');
@@ -42,7 +39,7 @@ describe('Redite', () => {
 
       it('should check if a key exists', async () => {
         await expect(wrapper.has('test')).to.become(false);
-        await set('test', 'existance test');
+        await client.set('test', 'existance test');
         await expect(wrapper.has('test')).to.become(true);
       });
     });
@@ -53,9 +50,9 @@ describe('Redite', () => {
       });
 
       it('should delete a key', async () => {
-        await set('test', 'deletion test');
+        await client.set('test', 'deletion test');
         await wrapper.delete('test');
-        await expect(promisify(client.exists, client)('test')).to.become(0);
+        await expect(client.exists('test')).to.become(0);
       });
     });
 

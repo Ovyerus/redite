@@ -31,9 +31,7 @@
   },
   "homepage": "https://github.com/Ovyerus/redite#readme",
   "devDependencies": {
-    "@types/redis": "^2.8.14",
-    "@typescript-eslint/eslint-plugin": "2.3.1",
-    "@typescript-eslint/parser": "2.3.1",
+    "@types/ioredis": "^4.14.4",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "eslint": "^6.8.0",
@@ -47,7 +45,7 @@
     "prettier": "1.18.2"
   },
   "dependencies": {
-    "redis": "^2.8.0"
+    "ioredis": "^4.14.1"
   },
   "nyc": {
     "reporter": [

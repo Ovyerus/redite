@@ -2,13 +2,12 @@
 
 const { expect, use } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const redis = require('redis');
+const Redis = require('ioredis');
 
 const Redite = require('../');
 
 const {
-  promisify,
-  DB,
+  db,
   TestVal,
   TestHash,
   TestList,
@@ -20,14 +19,11 @@ const {
 
 use(chaiAsPromised);
 
-const client = redis.createClient({ db: DB });
+const client = new Redis({ db });
 const wrapper = new Redite({ client });
 
-const flushdb = promisify(client.flushdb, client);
-const type = promisify(client.type, client);
-
-beforeEach(() => flushdb());
-after(() => flushdb());
+beforeEach(() => client.flushdb());
+after(() => client.flushdb());
 
 describe('Redite array methods', () => {
   describe('Mutating methods', () => {
@@ -50,7 +46,7 @@ describe('Redite array methods', () => {
       it('should remove and return the value from the list', async () => {
         await wrapper.test.set(TestList);
         await expect(wrapper.test.pop()).to.become(TestVal);
-        await expect(type('test')).to.become('none');
+        await expect(client.type('test')).to.become('none');
       });
 
       it('should only pop the last item from the list', async () => {
@@ -79,7 +75,7 @@ describe('Redite array methods', () => {
       it('should remove and return the value from the list', async () => {
         await wrapper.test.set(TestList);
         await expect(wrapper.test.shift()).to.become(TestVal);
-        await expect(type('test')).to.become('none');
+        await expect(client.type('test')).to.become('none');
       });
 
       it('should only shift the first item from the list', async () => {

@@ -1,7 +1,4 @@
-// eslint-disable-next-line
-require('./promisifyRedis');
-
-const redis = require('redis');
+const Redis = require('ioredis');
 
 const util = require('util');
 
@@ -34,7 +31,7 @@ function genTree(stack) {
  */
 class Redite {
   constructor(options = {}) {
-    this._redis = options.client || redis.createClient({ url: options.url });
+    this._redis = options.client || new Redis(options.url);
     this._serialise = options.serialise || JSON.stringify;
     this._parse = options.parse || JSON.parse;
     this._deletedString = options.deletedString || '@__DELETED__@';
@@ -52,8 +49,8 @@ class Redite {
         if (key === 'set')
           throw new Error('You cannot use #set on the root object.');
         if (key === 'has')
-          return key => obj._redis.pexists(key).then(val => !!val);
-        if (key === 'delete') return key => obj._redis.pdel(key).then(() => {});
+          return key => obj._redis.exists(key).then(val => !!val);
+        if (key === 'delete') return key => obj._redis.del(key).then(() => {});
 
         // Continue the chain with a child object.
         return new ChildWrapper(obj, key);
@@ -106,7 +103,7 @@ class Redite {
    */
   async getStack(key, stack = []) {
     const client = this._redis;
-    const type = await client.ptype(key);
+    const type = await client.type(key);
     const hasStack = Array.isArray(stack) && stack.length;
     let result;
 
@@ -114,8 +111,8 @@ class Redite {
 
     if (type === 'hash') {
       result = hasStack
-        ? await client.phget(key, stack.shift())
-        : await client.phgetall(key);
+        ? await client.hget(key, stack.shift())
+        : await client.hgetall(key);
 
       if (hasStack) result = this._parse(result);
       else
@@ -125,13 +122,13 @@ class Redite {
         }, {});
     } else if (type === 'list') {
       result = hasStack
-        ? await client.plindex(key, stack.shift())
-        : await client.plrange(key, 0, -1);
+        ? await client.lindex(key, stack.shift())
+        : await client.lrange(key, 0, -1);
 
       if (hasStack) result = this._parse(result);
       else result = result.map(val => this._parse(val));
     } else {
-      result = await client.pget(key);
+      result = await client.set(key);
       result = this._parse(result);
     }
 
@@ -157,8 +154,8 @@ class Redite {
       value && typeof value === 'object' && value.constructor === Object;
 
     if (Array.isArray(value) && value.length && stackOneKey) {
-      await client.pdel(stack[0]);
-      await client.prpush(stack.concat(value.map(val => this._serialise(val))));
+      await client.set(stack[0]);
+      await client.rpush(stack.concat(value.map(val => this._serialise(val))));
 
       return;
     } else if (Array.isArray(value) && stackOneKey) return;
@@ -171,8 +168,8 @@ class Redite {
         Object.entries(value).map(([key, val]) => [key, this._serialise(val)])
       );
 
-      await client.pdel(stack[0]);
-      await client.phmset(hm);
+      await client.set(stack[0]);
+      await client.hmset(hm);
 
       return;
     } else if (isObj && !Object.keys(value).length && stackOneKey) {
@@ -187,28 +184,28 @@ class Redite {
       return;
     }
 
-    const type = await client.ptype(stack[0]);
+    const type = await client.type(stack[0]);
     const stackTwoKeys = stack.length === 2;
     let result;
 
     if (type === 'list') {
       if (stackTwoKeys) {
-        await client.plset(stack.concat(this._serialise(value)));
+        await client.lset(stack.concat(this._serialise(value)));
         return;
       }
 
-      result = await client.plindex(stack.slice(0, 2));
+      result = await client.lindex(stack.slice(0, 2));
     } else if (type === 'hash') {
       if (stackTwoKeys) {
-        await client.phset(stack.concat(this._serialise(value)));
+        await client.hset(stack.concat(this._serialise(value)));
         return;
       }
 
-      result = await client.phget(stack.slice(0, 2));
+      result = await client.hget(stack.slice(0, 2));
     } else if (type === 'none' && stack.length > 1)
       result = genTree(stack.slice(1));
     else {
-      await client.pset(stack[0], this._serialise(value));
+      await client.set(stack[0], this._serialise(value));
       return;
     }
 
@@ -228,11 +225,11 @@ class Redite {
     ref[stack.slice(-1)[0]] = value;
 
     if (type === 'list')
-      await client.plset(stack[0], stack[1], this._serialise(result));
+      await client.lset(stack[0], stack[1], this._serialise(result));
     else if (type === 'hash')
-      await client.phset(stack[0], stack[1], this._serialise(result));
+      await client.hset(stack[0], stack[1], this._serialise(result));
     else if (Array.isArray(result))
-      await client.prpush(
+      await client.rpush(
         [stack[0]].concat(result.map(val => this._serialise(val)))
       );
     else {
@@ -241,7 +238,7 @@ class Redite {
         Object.entries(result).map(([key, val]) => [key, this._serialise(val)])
       );
 
-      await client.phmset(hm);
+      await client.hmset(hm);
     }
   }
 
@@ -254,20 +251,20 @@ class Redite {
    */
   async deleteStack(key, stack = []) {
     if (!stack || !stack.length) {
-      await this._redis.pdel(key);
+      await this._redis.set(key);
       return;
     }
 
     const client = this._redis;
     const stackOneKey = stack.length === 1;
-    const type = await client.ptype(key);
+    const type = await client.type(key);
 
     if (type === 'hash' && stackOneKey) {
-      await client.phdel(key, stack[0]);
+      await client.hdel(key, stack[0]);
       return;
     } else if (type === 'list' && stackOneKey) {
-      await client.plset(key, stack[0], this._deletedString);
-      await client.plrem(key, 0, this._deletedString);
+      await client.lset(key, stack[0], this._deletedString);
+      await client.lrem(key, 0, this._deletedString);
 
       return;
     } else if (type === 'none') return;
@@ -289,18 +286,18 @@ class Redite {
    * @returns {Promise<Boolean>} Whether the key exists.
    */
   async hasStack(key, stack = []) {
-    if (!stack || !stack.length) return !!(await this._redis.pexists(key));
+    if (!stack || !stack.length) return !!(await this._redis.exists(key));
 
     const client = this._redis;
-    const type = await client.ptype(key);
+    const type = await client.type(key);
     let result;
 
-    if (type === 'list') result = await client.plindex(key, stack.shift());
+    if (type === 'list') result = await client.lindex(key, stack.shift());
     else if (type === 'hash' && stack.length === 1)
-      return !!(await client.phexists(key, stack[0]));
-    else if (type === 'hash') result = await client.phget(key, stack.shift());
+      return !!(await client.hexists(key, stack[0]));
+    else if (type === 'hash') result = await client.hget(key, stack.shift());
     else if (type === 'none') return false;
-    else result = await client.pget(key);
+    else result = await client.set(key);
 
     if (!result) return false;
 
@@ -338,7 +335,7 @@ class Redite {
     const client = this._redis;
 
     return async function(...args) {
-      const type = await client.ptype(stack[0]);
+      const type = await client.type(stack[0]);
 
       //
       if ((type === 'list' || type === 'none') && stack.length === 1) {
@@ -347,19 +344,19 @@ class Redite {
 
         switch (method) {
           case 'push':
-            p = client.prpush(stack.concat(serialisedArgs));
+            p = client.rpush(stack.concat(serialisedArgs));
             break;
           case 'pop':
-            p = client.prpop(stack[0]).then(res => this._parse(res));
+            p = client.rpop(stack[0]).then(res => this._parse(res));
             break;
           case 'unshift':
-            p = client.plpush(stack.concat(serialisedArgs));
+            p = client.lpush(stack.concat(serialisedArgs));
             break;
           case 'shift':
-            p = client.plpop(stack[0]).then(res => this._parse(res));
+            p = client.lpop(stack[0]).then(res => this._parse(res));
             break;
           case 'remove':
-            p = client.plrem(
+            p = client.lrem(
               stack[0],
               !isNaN(args[1]) ? Number(args[1]) : 0,
               serialisedArgs[0]
@@ -367,11 +364,11 @@ class Redite {
             break;
           case 'removeIndex':
             p = client
-              .plset(stack[0], args[0], this._deletedString)
-              .then(() => client.plrem(stack[0], 0, this._deletedString));
+              .lset(stack[0], args[0], this._deletedString)
+              .then(() => client.lrem(stack[0], 0, this._deletedString));
             break;
           case 'length':
-            p = client.pllen(stack[0]);
+            p = client.llen(stack[0]);
             break;
           default:
             throw new Error(
