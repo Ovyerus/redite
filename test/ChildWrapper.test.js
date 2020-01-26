@@ -41,6 +41,7 @@ describe('ChildWrapper', () => {
       });
 
       it('should continually give ChildWrappers no matter how deep the stack goes', () => {
+        // eslint-disable-next-line prefer-destructuring
         const a = wrapper.foo.bar.faz.foobar.fizz.buzz.fizzbuzz[100];
 
         expect(a).to.be.instanceOf(Redite.ChildWrapper);
@@ -58,7 +59,7 @@ describe('ChildWrapper', () => {
     });
 
     describe('Getting objects', () => {
-      it('should be a function that returns a promise', async () => {
+      it('should be a function that returns a promise', () => {
         expect(wrapper.foo.then).to.be.a('function');
         expect(wrapper.foo.then()).to.be.instanceOf(Promise);
       });
@@ -170,6 +171,7 @@ describe('ChildWrapper', () => {
         await wrapper.test.set({});
         await expect(exists('test')).to.eventually.be.ok;
         await expect(wrapper.test).to.become({
+          // eslint-disable-next-line camelcase
           __setting_empty_hash__: '__setting_empty_hash__'
         });
       });

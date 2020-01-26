@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 require('./promisifyRedis');
 
 const redis = require('redis');
@@ -178,6 +179,7 @@ class Redite {
       // Redis doesn't support having empty values, which includes lists and hashmaps, and since hashmaps aren't order dependent, we can simulate an empty hash with a placeholder key.
       await this.setStack(
         {
+          // eslint-disable-next-line camelcase
           __setting_empty_hash__: '__setting_empty_hash__'
         },
         stack
@@ -397,7 +399,7 @@ class Redite {
         if (!args.length) throw new Error('You must provide an item to remove');
         if (typeof args[1] !== 'number') args[1] = 0;
 
-        let i = args[1];
+        let [i] = args;
 
         if (i > 0)
           for (; i > 0; i--) {
@@ -420,6 +422,7 @@ class Redite {
 
         result.splice(args[0], 1);
       } else {
+        // eslint-disable-next-line prefer-spread
         ret = result[method].apply(result, args);
 
         if (NonMutatingMethods.includes(method)) write = false;

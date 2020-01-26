@@ -31,7 +31,7 @@ after(() => flushdb());
 
 describe('Redite array methods', () => {
   describe('Mutating methods', () => {
-    describe('#push', async () => {
+    describe('#push', () => {
       for (const [type, val] of Tests)
         it(`should append the ${type} to the list`, async () => {
           await wrapper.test.push(val);
@@ -255,6 +255,7 @@ describe('Redite array methods', () => {
     });
 
     describe('Method tests', () => {
+      // eslint-disable-next-line prefer-const
       for (let [method, tests] of Object.entries(NonMutatingTests)) {
         if (!Array.isArray(tests)) tests = [tests];
 

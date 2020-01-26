@@ -23,13 +23,13 @@ const wrapper = new Redite({
 });
 
 const flushdb = promisify(client.flushdb, client);
-const set = promisify(client.set, client);
 
 beforeEach(() => flushdb());
 after(() => flushdb());
 
 describe('Extra coverage', () => {
   it('should auto-gen settings when not given anything', () => {
+    /* eslint-disable no-unused-expressions */
     const db = new Redite();
 
     expect(db._redis).to.be.instanceof(redis.RedisClient);
@@ -38,6 +38,7 @@ describe('Extra coverage', () => {
     expect(db._deletedString).to.equal('@__DELETED__@');
     expect(db._customInspection).to.be.false;
     expect(db._ignoreUndefinedValues).to.be.false;
+    /* eslint-enable */
   });
 
   it('should unref if told to', function(done) {
