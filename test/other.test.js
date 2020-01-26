@@ -3,8 +3,6 @@
 const {expect, use} = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const redis = require('redis');
-const redisMock = require('redis-mock');
-const promisifyRedisClient = require('../src/promisifyRedis');
 const {inspect: {custom}} = require('util');
 const {fork} = require('child_process');
 const Redite = require('../');
@@ -15,9 +13,8 @@ const {
 } = require('./lib/consts');
 
 use(chaiAsPromised);
-promisifyRedisClient(redisMock.RedisClient.prototype);
 
-const client = redisMock.createClient({db: DB});
+const client = redis.createClient({db: DB});
 const wrapper = new Redite({
     client,
     customInspection: true,
