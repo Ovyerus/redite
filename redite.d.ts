@@ -33,7 +33,6 @@ interface RediteOptions {
   serialise?: (value: any) => string;
   parse?: (value: string) => any;
   deletedString?: string;
-  unref?: boolean;
   customInspection?: boolean;
   ignoreUndefinedValues?: boolean;
 }

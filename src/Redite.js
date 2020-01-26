@@ -22,7 +22,7 @@ function genTree(stack) {
 /**
  * Redis proxy wrapper.
  *
- * @prop {redis.RedisClient} _redis Internal Redis connection.
+ * @prop {Redis} _redis Internal Redis connection.
  * @prop {Function} _serialise Data serialisation function.
  * @prop {Function} _parse Data parser function.
  * @prop {String} _deletedString Temporary string used when deleting items from a list.
@@ -37,8 +37,6 @@ class Redite {
     this._deletedString = options.deletedString || '@__DELETED__@';
     this._ignoreUndefinedValues = options.ignoreUndefinedValues || false;
     this._customInspection = options.customInspection || false;
-
-    if (options.unref) this._redis.unref(); // Lets Node exit if nothing is happening.
 
     // (https://stackoverflow.com/a/40714458/8778928)
     return new Proxy(this, {
@@ -128,7 +126,7 @@ class Redite {
       if (hasStack) result = this._parse(result);
       else result = result.map(val => this._parse(val));
     } else {
-      result = await client.set(key);
+      result = await client.get(key);
       result = this._parse(result);
     }
 
@@ -154,7 +152,7 @@ class Redite {
       value && typeof value === 'object' && value.constructor === Object;
 
     if (Array.isArray(value) && value.length && stackOneKey) {
-      await client.set(stack[0]);
+      await client.del(stack[0]);
       await client.rpush(stack.concat(value.map(val => this._serialise(val))));
 
       return;
@@ -168,7 +166,7 @@ class Redite {
         Object.entries(value).map(([key, val]) => [key, this._serialise(val)])
       );
 
-      await client.set(stack[0]);
+      await client.del(stack[0]);
       await client.hmset(hm);
 
       return;
@@ -251,7 +249,7 @@ class Redite {
    */
   async deleteStack(key, stack = []) {
     if (!stack || !stack.length) {
-      await this._redis.set(key);
+      await this._redis.del(key);
       return;
     }
 
@@ -297,7 +295,7 @@ class Redite {
       return !!(await client.hexists(key, stack[0]));
     else if (type === 'hash') result = await client.hget(key, stack.shift());
     else if (type === 'none') return false;
-    else result = await client.set(key);
+    else result = await client.get(key);
 
     if (!result) return false;
 
@@ -356,11 +354,7 @@ class Redite {
             p = client.lpop(stack[0]).then(res => this._parse(res));
             break;
           case 'remove':
-            p = client.lrem(
-              stack[0],
-              !isNaN(args[1]) ? Number(args[1]) : 0,
-              serialisedArgs[0]
-            );
+            p = client.lrem(stack[0], Number(args[1]) || 0, serialisedArgs[0]);
             break;
           case 'removeIndex':
             p = client

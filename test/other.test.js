@@ -7,7 +7,6 @@ const Redis = require('ioredis');
 const {
   inspect: { custom }
 } = require('util');
-const { fork } = require('child_process');
 
 const Redite = require('../');
 
@@ -37,23 +36,6 @@ describe('Extra coverage', () => {
     expect(db._customInspection).to.be.false;
     expect(db._ignoreUndefinedValues).to.be.false;
     /* eslint-enable */
-  });
-
-  it('should unref if told to', function(done) {
-    this.timeout(12000);
-    this.slow(12000);
-
-    const child = fork(`${__dirname}/lib/unrefTest.js`);
-
-    const timer = setTimeout(() => {
-      child.kill();
-      done(new Error('Child process did not exit.'));
-    }, 5000);
-
-    child.on('close', () => {
-      clearTimeout(timer);
-      done();
-    });
   });
 
   describe('getStack', () => {
