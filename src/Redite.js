@@ -171,7 +171,8 @@ class Redite {
 
       return;
     } else if (isObj && !Object.keys(value).length && stackOneKey) {
-      // Redis doesn't support having empty values, which includes lists and hashmaps, and since hashmaps aren't order dependent, we can simulate an empty hash with a placeholder key.
+      // Redis doesn't support having empty values, which includes lists and hashmaps,
+      // and since hashmaps aren't order dependent, we can simulate an empty hash with a placeholder key.
       await this.setStack(
         {
           // eslint-disable-next-line camelcase
@@ -373,7 +374,7 @@ class Redite {
         return p;
       }
 
-      const result = await this.getStack(stack[0], stack.slice(1));
+      let result = await this.getStack(stack[0], stack.slice(1));
 
       if (!Array.isArray(result))
         throw new TypeError(
@@ -388,25 +389,25 @@ class Redite {
         write = false;
       } else if (method === 'remove') {
         if (!args.length) throw new Error('You must provide an item to remove');
-        if (typeof args[1] !== 'number') args[1] = 0;
 
-        let [i] = args;
+        const [toRemove, amt] = [args[0], Number(args[1]) || 0];
+        const count = result.filter(x => x === toRemove).length;
+        const amount = Math.abs(amt) > count ? count : amt;
+        const symbol = Symbol('replacer');
+        const aimFor = amount === 0 ? -1 : 0;
 
-        if (i > 0)
-          for (; i > 0; i--) {
-            result.splice(result.indexOf(args[0]), 1);
+        let i = amount;
 
-            if (result.indexOf(args[0]) === -1) break;
-          }
-        else if (i < 0)
-          for (; i < 0; i++) {
-            result.splice(result.lastIndexOf(args[0]), 1);
+        while (result.indexOf(toRemove) !== -1 && i !== aimFor)
+          if (amount > 0) {
+            result[result.indexOf(toRemove)] = symbol;
+            i--;
+          } else if (amount < 0) {
+            result[result.lastIndexOf(toRemove)] = symbol;
+            i++;
+          } else result = result.map(x => (x === toRemove ? symbol : x));
 
-            if (result.indexOf(args[0]) === -1) break;
-          }
-        else
-          while (result.indexOf(args[0]) !== -1)
-            result.splice(result.indexOf(args[0]), 1);
+        result = result.filter(x => x !== symbol);
       } else if (method === 'removeIndex') {
         if (typeof args[0] !== 'number')
           throw new Error('You must provide an index to remove.');
