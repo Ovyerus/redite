@@ -140,8 +140,9 @@ class Redite {
    *
    * @param {*} value Value to set.
    * @param {String[]} [stack=[]] Key stack to set to.
+   * @param {Number?} [ttl] TTL of the key in seconds (only works for root keys)
    */
-  async setStack(value, stack = []) {
+  async setStack(value, stack = [], ttl) {
     if (!stack || !stack.length)
       throw new Error('At least one key is required in the stack');
     if (value === undefined && this._ignoreUndefinedValues) return;
@@ -154,6 +155,8 @@ class Redite {
     if (Array.isArray(value) && value.length && stackOneKey) {
       await client.del(stack[0]);
       await client.rpush(stack.concat(value.map(val => this._serialise(val))));
+
+      if (ttl) await client.expire(stack[0], ttl);
 
       return;
     } else if (Array.isArray(value) && stackOneKey) return;
@@ -169,6 +172,8 @@ class Redite {
       await client.del(stack[0]);
       await client.hmset(hm);
 
+      if (ttl) await client.expire(stack[0], ttl);
+
       return;
     } else if (isObj && !Object.keys(value).length && stackOneKey) {
       // Redis doesn't support having empty values, which includes lists and hashmaps,
@@ -178,7 +183,8 @@ class Redite {
           // eslint-disable-next-line camelcase
           __setting_empty_hash__: '__setting_empty_hash__'
         },
-        stack
+        stack,
+        ttl
       );
       return;
     }

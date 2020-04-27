@@ -28,7 +28,8 @@ class ChildWrapper {
 
         // Special methods, used in place of actually performing native operations.
         if (key === 'set')
-          return value => parentObj.setStack(value, stack.concat(parentKey));
+          return (value, ttl) =>
+            parentObj.setStack(value, stack.concat(parentKey), ttl);
         if (key === 'has' || key === 'exists')
           return key => {
             stack.push(parentKey);
