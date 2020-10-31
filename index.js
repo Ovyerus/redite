@@ -1,6 +1,6 @@
-const Constants = require('./src/Constants');
-const Redite = require('./src/Redite');
-const ChildWrapper = require('./src/ChildWrapper');
+const ChildWrapper = require("./src/ChildWrapper");
+const Constants = require("./src/Constants");
+const Redite = require("./src/Redite");
 
 function r(options) {
   return new Redite(options);
