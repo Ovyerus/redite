@@ -44,15 +44,5 @@
   },
   "dependencies": {
     "ioredis": "^4.14.1"
-  },
-  "nyc": {
-    "reporter": [
-      "text-summary",
-      "html",
-      "lcov"
-    ],
-    "exclude": [
-      "test/"
-    ]
   }
 }
