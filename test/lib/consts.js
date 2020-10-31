@@ -1,108 +1,105 @@
 const db = 15;
-const TestVal = 'test';
+const TestVal = "test";
 const TestHash = { TestHash: TestVal };
 const TestList = [TestVal];
 const DeepHash = { bar: { baz: { foobar: TestHash } } };
 
-const Tests = [['value', TestVal], ['object', TestHash], ['array', TestList]];
+const Tests = [
+  ["value", TestVal],
+  ["object", TestHash],
+  ["array", TestList],
+];
 
 const FinderDouble = [TestVal, TestVal];
-const Finder = [...FinderDouble, 'find me', ...FinderDouble];
+const Finder = [...FinderDouble, "find me", ...FinderDouble];
 const Finder2 = [
   ...FinderDouble,
-  'find me',
+  "find me",
   TestVal,
-  'find me',
-  ...FinderDouble
+  "find me",
+  ...FinderDouble,
 ];
-const FinderAlt = [...FinderDouble, 'dont find me', ...FinderDouble];
-const RemoveArr = ['safe', TestVal, 'safe', TestVal, 'safe', TestVal, 'safe'];
-const RemoveArrRes = ['safe', 'safe', 'safe', 'safe'];
+const FinderAlt = [...FinderDouble, "dont find me", ...FinderDouble];
+const RemoveArr = ["safe", TestVal, "safe", TestVal, "safe", TestVal, "safe"];
+const RemoveArrRes = ["safe", "safe", "safe", "safe"];
 const NonMutatingTests = {
   concat: {
-    should: 'concat the value',
-    args: ['concatenated'],
-    expected: [TestVal, 'concatenated']
+    should: "concat the value",
+    args: ["concatenated"],
+    expected: [TestVal, "concatenated"],
   },
   find: {
-    should: 'find the wanted value',
-    args: [val => val === 'find me'],
-    expected: 'find me',
-    initial: Finder
+    should: "find the wanted value",
+    args: [(val) => val === "find me"],
+    expected: "find me",
+    initial: Finder,
   },
   findIndex: {
-    should: 'find the index of the wanted value',
-    args: [val => val === 'find me'],
+    should: "find the index of the wanted value",
+    args: [(val) => val === "find me"],
     expected: 2,
-    initial: Finder
+    initial: Finder,
   },
   includes: [
     {
-      should: 'check that the object is included',
-      args: ['find me'],
+      should: "check that the object is included",
+      args: ["find me"],
       expected: true,
-      initial: Finder
+      initial: Finder,
     },
     {
-      should: 'check that the object is not included',
-      args: ['find me'],
+      should: "check that the object is not included",
+      args: ["find me"],
       expected: false,
-      initial: FinderAlt
-    }
+      initial: FinderAlt,
+    },
   ],
   indexOf: [
     {
-      should: 'find the index of the wanted value',
-      args: ['find me'],
+      should: "find the index of the wanted value",
+      args: ["find me"],
       expected: 2,
-      initial: Finder
+      initial: Finder,
     },
     {
-      should: 'not find the index of the wanted value',
-      args: ['find me'],
+      should: "not find the index of the wanted value",
+      args: ["find me"],
       expected: -1,
-      initial: FinderAlt
-    }
+      initial: FinderAlt,
+    },
   ],
   lastIndexOf: [
     {
-      should: 'find the last index of the wanted value',
-      args: ['find me'],
+      should: "find the last index of the wanted value",
+      args: ["find me"],
       expected: 4,
-      initial: Finder2
+      initial: Finder2,
     },
     {
-      should: 'not find the last index of the wanted value',
-      args: ['find me'],
+      should: "not find the last index of the wanted value",
+      args: ["find me"],
       expected: -1,
-      initial: FinderAlt
-    }
+      initial: FinderAlt,
+    },
   ],
   map: {
-    should: 'apply the given function on all values',
-    args: [
-      val =>
-        val +
-        val
-          .split('')
-          .reverse()
-          .join('')
-    ],
-    expected: ['testtset', 'reverseesrever', 'racecarracecar'],
-    initial: [TestVal, 'reverse', 'racecar']
+    should: "apply the given function on all values",
+    args: [(val) => val + val.split("").reverse().join("")],
+    expected: ["testtset", "reverseesrever", "racecarracecar"],
+    initial: [TestVal, "reverse", "racecar"],
   },
   filter: {
-    should: 'filter out the unwanted values',
-    args: [val => val !== TestVal],
-    expected: Finder.filter(val => val !== TestVal),
-    initial: Finder
+    should: "filter out the unwanted values",
+    args: [(val) => val !== TestVal],
+    expected: Finder.filter((val) => val !== TestVal),
+    initial: Finder,
   },
   join: {
     should: 'join all the values with a "-"',
-    args: ['-'],
-    expected: Finder.join('-'),
-    initial: Finder
-  }
+    args: ["-"],
+    expected: Finder.join("-"),
+    initial: Finder,
+  },
 };
 
 module.exports = {
@@ -117,5 +114,5 @@ module.exports = {
   FinderAlt,
   RemoveArr,
   RemoveArrRes,
-  NonMutatingTests
+  NonMutatingTests,
 };

@@ -1,4 +1,4 @@
-const { SupportedArrayMethods } = require('./Constants');
+const { SupportedArrayMethods } = require("./Constants");
 
 /*
  * Since this type of thing is used in two places, its simpler to put it in a function so we don't have to
@@ -21,25 +21,26 @@ class ChildWrapper {
    * @param {String[]} [stack=[]] Lower level keys, starting with the root key.
    */
   constructor(parentObj, parentKey, stack = []) {
+    // eslint-disable-next-line no-constructor-return
     return new Proxy(this, {
       get(obj, key) {
         // Allow access to the key stack (primarily exposed for tests).
-        if (key === '_stack') return stack.concat(parentKey);
+        if (key === "_stack") return stack.concat(parentKey);
 
         // Special methods, used in place of actually performing native operations.
-        if (key === 'set')
+        if (key === "set")
           return (value, ttl) =>
             parentObj.setStack(value, stack.concat(parentKey), ttl);
-        if (key === 'has' || key === 'exists')
-          return key => {
+        if (key === "has" || key === "exists")
+          return (key) => {
             stack.push(parentKey);
 
             if (key != null) stack.push(key);
             return parentObj.hasStack(stack.shift(), stack);
           };
 
-        if (key === 'delete')
-          return key => {
+        if (key === "delete")
+          return (key) => {
             stack.push(parentKey);
 
             if (key != null) stack.push(key);
@@ -49,7 +50,7 @@ class ChildWrapper {
         if (SupportedArrayMethods.includes(key))
           return parentObj.arrayStack(key, stack.concat(parentKey));
 
-        if (['then', 'catch', 'finally'].includes(key))
+        if (["then", "catch", "finally"].includes(key))
           // Allows object trees to simply be awaited when wishing to retrieve objects from Redis, without any funky syntax.
           // This may seem like magic (the bad kind), but that's the entire point of this library.
           return (...args) =>
@@ -61,7 +62,7 @@ class ChildWrapper {
                Throw errors for other methods, as there are special keys that are used for these instead, since this is entirely async.
             */
       set() {
-        throw new Error('ChildWrapper does not support setting (foo = bar)');
+        throw new Error("ChildWrapper does not support setting (foo = bar)");
       },
 
       has() {
@@ -72,9 +73,9 @@ class ChildWrapper {
 
       deleteProperty() {
         throw new Error(
-          'ChildWrapper does not support deletion (delete foo.bar)'
+          "ChildWrapper does not support deletion (delete foo.bar)"
         );
-      }
+      },
     });
   }
 }

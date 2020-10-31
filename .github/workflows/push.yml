@@ -1,0 +1,33 @@
+name: Test
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [10.x, 12.x, 14.x]
+        redis: [5, 6]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: yarn install
+      - run: yarn lint
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.1.0
+        with:
+          redis-version: ${{ matrix.redis }}
+
+      - name: Test & publish coverage
+        uses: paambaati/codeclimate-action@v2.4.0
+        env:
+          CC_TEST_REPORTER_ID: e5a1025a828b07fc2e20ab7d91679ac6d07283e3d3a7714019d0bfd9e4a8ac05
+        with:
+          coverageCommand: yarn coverage

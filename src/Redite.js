@@ -1,9 +1,9 @@
-const Redis = require('ioredis');
+const Redis = require("ioredis");
 
-const util = require('util');
+const util = require("util");
 
-const { NonMutatingMethods, SupportedArrayMethods } = require('./Constants');
-const ChildWrapper = require('./ChildWrapper');
+const ChildWrapper = require("./ChildWrapper");
+const { NonMutatingMethods, SupportedArrayMethods } = require("./Constants");
 
 function genTree(stack) {
   const ret = isNaN(stack[0]) ? {} : [];
@@ -34,21 +34,23 @@ class Redite {
     this._redis = options.client || new Redis(options.url);
     this._serialise = options.serialise || JSON.stringify;
     this._parse = options.parse || JSON.parse;
-    this._deletedString = options.deletedString || '@__DELETED__@';
+    this._deletedString = options.deletedString || "@__DELETED__@";
     this._ignoreUndefinedValues = options.ignoreUndefinedValues || false;
     this._customInspection = options.customInspection || false;
 
     // (https://stackoverflow.com/a/40714458/8778928)
+    // eslint-disable-next-line no-constructor-return
     return new Proxy(this, {
       get(obj, key) {
         if (obj.hasOwnProperty(key) || obj[key]) return obj[key];
 
         // "Special" methods
-        if (key === 'set')
-          throw new Error('You cannot use #set on the root object.');
-        if (key === 'has')
-          return key => obj._redis.exists(key).then(val => !!val);
-        if (key === 'delete') return key => obj._redis.del(key).then(() => {});
+        if (key === "set")
+          throw new Error("You cannot use #set on the root object.");
+        if (key === "has")
+          return (key) => obj._redis.exists(key).then((val) => !!val);
+        if (key === "delete")
+          return (key) => obj._redis.del(key).then(() => {});
 
         // Continue the chain with a child object.
         return new ChildWrapper(obj, key);
@@ -58,7 +60,7 @@ class Redite {
                 Throw errors for other things users may try on the root object, as they are not supported.
             */
       set() {
-        throw new Error('Redite does not support setting (foo = bar)');
+        throw new Error("Redite does not support setting (foo = bar)");
       },
 
       has() {
@@ -68,8 +70,8 @@ class Redite {
       },
 
       deleteProperty() {
-        throw new Error('Redite does not support deletion (delete foo.bar)');
-      }
+        throw new Error("Redite does not support deletion (delete foo.bar)");
+      },
     });
   }
 
@@ -80,7 +82,7 @@ class Redite {
 
       return new (class Redite {
         constructor() {
-          this._redis = '<hidden>';
+          this._redis = "<hidden>";
           this._serialise = scope._serialise;
           this._parse = scope._parse;
           this._deletedString = scope._deletedString;
@@ -105,9 +107,9 @@ class Redite {
     const hasStack = Array.isArray(stack) && stack.length;
     let result;
 
-    if (type === 'none') return;
+    if (type === "none") return;
 
-    if (type === 'hash') {
+    if (type === "hash") {
       result = hasStack
         ? await client.hget(key, stack.shift())
         : await client.hgetall(key);
@@ -118,19 +120,19 @@ class Redite {
           map[key] = this._parse(val);
           return map;
         }, {});
-    } else if (type === 'list') {
+    } else if (type === "list") {
       result = hasStack
         ? await client.lindex(key, stack.shift())
         : await client.lrange(key, 0, -1);
 
       if (hasStack) result = this._parse(result);
-      else result = result.map(val => this._parse(val));
+      else result = result.map((val) => this._parse(val));
     } else {
       result = await client.get(key);
       result = this._parse(result);
     }
 
-    stack.forEach(key => (result = result[key]));
+    stack.forEach((key) => (result = result[key]));
 
     return result;
   }
@@ -142,19 +144,21 @@ class Redite {
    * @param {String[]} [stack=[]] Key stack to set to.
    * @param {Number?} [ttl] TTL of the key in seconds (only works for root keys)
    */
-  async setStack(value, stack = [], ttl) {
+  async setStack(value, stack = [], ttl = null) {
     if (!stack || !stack.length)
-      throw new Error('At least one key is required in the stack');
+      throw new Error("At least one key is required in the stack");
     if (value === undefined && this._ignoreUndefinedValues) return;
 
     const client = this._redis;
     const stackOneKey = stack.length === 1;
     const isObj =
-      value && typeof value === 'object' && value.constructor === Object;
+      value && typeof value === "object" && value.constructor === Object;
 
     if (Array.isArray(value) && value.length && stackOneKey) {
       await client.del(stack[0]);
-      await client.rpush(stack.concat(value.map(val => this._serialise(val))));
+      await client.rpush(
+        stack.concat(value.map((val) => this._serialise(val)))
+      );
 
       if (ttl) await client.expire(stack[0], ttl);
 
@@ -181,7 +185,7 @@ class Redite {
       await this.setStack(
         {
           // eslint-disable-next-line camelcase
-          __setting_empty_hash__: '__setting_empty_hash__'
+          __setting_empty_hash__: "__setting_empty_hash__",
         },
         stack,
         ttl
@@ -193,31 +197,31 @@ class Redite {
     const stackTwoKeys = stack.length === 2;
     let result;
 
-    if (type === 'list') {
+    if (type === "list") {
       if (stackTwoKeys) {
         await client.lset(stack.concat(this._serialise(value)));
         return;
       }
 
       result = await client.lindex(stack.slice(0, 2));
-    } else if (type === 'hash') {
+    } else if (type === "hash") {
       if (stackTwoKeys) {
         await client.hset(stack.concat(this._serialise(value)));
         return;
       }
 
       result = await client.hget(stack.slice(0, 2));
-    } else if (type === 'none' && stack.length > 1)
+    } else if (type === "none" && stack.length > 1)
       result = genTree(stack.slice(1));
     else {
       await client.set(stack[0], this._serialise(value));
       return;
     }
 
-    if (type !== 'none') result = this._parse(result);
+    if (type !== "none") result = this._parse(result);
 
     let ref = result;
-    const keys = stack.slice(type === 'none' ? 1 : 2, -1);
+    const keys = stack.slice(type === "none" ? 1 : 2, -1);
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -229,13 +233,13 @@ class Redite {
 
     ref[stack.slice(-1)[0]] = value;
 
-    if (type === 'list')
+    if (type === "list")
       await client.lset(stack[0], stack[1], this._serialise(result));
-    else if (type === 'hash')
+    else if (type === "hash")
       await client.hset(stack[0], stack[1], this._serialise(result));
     else if (Array.isArray(result))
       await client.rpush(
-        [stack[0]].concat(result.map(val => this._serialise(val)))
+        [stack[0]].concat(result.map((val) => this._serialise(val)))
       );
     else {
       const hm = [].concat.apply(
@@ -264,15 +268,15 @@ class Redite {
     const stackOneKey = stack.length === 1;
     const type = await client.type(key);
 
-    if (type === 'hash' && stackOneKey) {
+    if (type === "hash" && stackOneKey) {
       await client.hdel(key, stack[0]);
       return;
-    } else if (type === 'list' && stackOneKey) {
+    } else if (type === "list" && stackOneKey) {
       await client.lset(key, stack[0], this._deletedString);
       await client.lrem(key, 0, this._deletedString);
 
       return;
-    } else if (type === 'none') return;
+    } else if (type === "none") return;
 
     const result = await this.getStack(key, [stack[0]]);
     const ref = stack.slice(1, -1).reduce((obj, key) => obj[key], result);
@@ -297,11 +301,11 @@ class Redite {
     const type = await client.type(key);
     let result;
 
-    if (type === 'list') result = await client.lindex(key, stack.shift());
-    else if (type === 'hash' && stack.length === 1)
+    if (type === "list") result = await client.lindex(key, stack.shift());
+    else if (type === "hash" && stack.length === 1)
       return !!(await client.hexists(key, stack[0]));
-    else if (type === 'hash') result = await client.hget(key, stack.shift());
-    else if (type === 'none') return false;
+    else if (type === "hash") result = await client.hget(key, stack.shift());
+    else if (type === "none") return false;
     else result = await client.get(key);
 
     if (!result) return false;
@@ -335,40 +339,40 @@ class Redite {
     if (!SupportedArrayMethods.includes(method))
       throw new Error(`Method "${method}" is not supported`);
     if (!stack || !stack.length)
-      throw new Error('At least one key is required in the stack');
+      throw new Error("At least one key is required in the stack");
 
     const client = this._redis;
 
-    return async function(...args) {
+    return async function (...args) {
       const type = await client.type(stack[0]);
 
       //
-      if ((type === 'list' || type === 'none') && stack.length === 1) {
-        const serialisedArgs = args.map(val => this._serialise(val));
+      if ((type === "list" || type === "none") && stack.length === 1) {
+        const serialisedArgs = args.map((val) => this._serialise(val));
         let p;
 
         switch (method) {
-          case 'push':
+          case "push":
             p = client.rpush(stack.concat(serialisedArgs));
             break;
-          case 'pop':
-            p = client.rpop(stack[0]).then(res => this._parse(res));
+          case "pop":
+            p = client.rpop(stack[0]).then((res) => this._parse(res));
             break;
-          case 'unshift':
+          case "unshift":
             p = client.lpush(stack.concat(serialisedArgs));
             break;
-          case 'shift':
-            p = client.lpop(stack[0]).then(res => this._parse(res));
+          case "shift":
+            p = client.lpop(stack[0]).then((res) => this._parse(res));
             break;
-          case 'remove':
+          case "remove":
             p = client.lrem(stack[0], Number(args[1]) || 0, serialisedArgs[0]);
             break;
-          case 'removeIndex':
+          case "removeIndex":
             p = client
               .lset(stack[0], args[0], this._deletedString)
               .then(() => client.lrem(stack[0], 0, this._deletedString));
             break;
-          case 'length':
+          case "length":
             p = client.llen(stack[0]);
             break;
           default:
@@ -390,16 +394,16 @@ class Redite {
       let write = true;
       let ret;
 
-      if (method === 'length') {
+      if (method === "length") {
         ret = result.length;
         write = false;
-      } else if (method === 'remove') {
-        if (!args.length) throw new Error('You must provide an item to remove');
+      } else if (method === "remove") {
+        if (!args.length) throw new Error("You must provide an item to remove");
 
         const [toRemove, amt] = [args[0], Number(args[1]) || 0];
-        const count = result.filter(x => x === toRemove).length;
+        const count = result.filter((x) => x === toRemove).length;
         const amount = Math.abs(amt) > count ? count : amt;
-        const symbol = Symbol('replacer');
+        const symbol = Symbol("replacer");
         const aimFor = amount === 0 ? -1 : 0;
 
         let i = amount;
@@ -411,12 +415,12 @@ class Redite {
           } else if (amount < 0) {
             result[result.lastIndexOf(toRemove)] = symbol;
             i++;
-          } else result = result.map(x => (x === toRemove ? symbol : x));
+          } else result = result.map((x) => (x === toRemove ? symbol : x));
 
-        result = result.filter(x => x !== symbol);
-      } else if (method === 'removeIndex') {
-        if (typeof args[0] !== 'number')
-          throw new Error('You must provide an index to remove.');
+        result = result.filter((x) => x !== symbol);
+      } else if (method === "removeIndex") {
+        if (typeof args[0] !== "number")
+          throw new Error("You must provide an index to remove.");
 
         result.splice(args[0], 1);
       } else {

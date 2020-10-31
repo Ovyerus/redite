@@ -1,7 +1,7 @@
 module.exports = {
-  extends: 'clarity',
+  extends: "clarity",
   rules: {
-    'no-multi-assign': 'off',
-    'no-prototype-builtins': 'off'
-  }
+    "no-multi-assign": "off",
+    "no-prototype-builtins": "off",
+  },
 };
