@@ -27,14 +27,14 @@ describe("Extra coverage", () => {
   it("should auto-gen settings when not given anything", () => {
     const db = new Redite();
 
-    expect(db._redis).toBeInstanceOf(Redis);
-    expect(db._serialise).toBe(JSON.stringify);
-    expect(db._parse).toBe(JSON.parse);
-    expect(db._deletedString).toBe("@__DELETED__@");
-    expect(db._customInspection).toBe(false);
-    expect(db._ignoreUndefinedValues).toBe(false);
+    expect(db.$redis).toBeInstanceOf(Redis);
+    expect(db.$serialise).toBe(JSON.stringify);
+    expect(db.$parse).toBe(JSON.parse);
+    expect(db.$deletedString).toBe("@__DELETED__@");
+    expect(db.$customInspection).toBe(false);
+    expect(db.$ignoreUndefinedValues).toBe(false);
 
-    db._redis.disconnect();
+    db.$redis.disconnect();
   });
 
   describe("getStack", () => {
@@ -116,12 +116,12 @@ describe("Extra coverage", () => {
     it('should have regular values, with `redis` set to "<hidden>"', () => {
       const res = wrapper[custom]();
 
-      expect(res._redis).toBe("<hidden>");
-      expect(res._serialise).toBe(wrapper._serialise);
-      expect(res._parse).toBe(wrapper._parse);
-      expect(res._deletedString).toBe(wrapper._deletedString);
-      expect(res._customInspection).toBe(wrapper._customInspection);
-      expect(res._ignoreUndefinedValues).toBe(wrapper._ignoreUndefinedValues);
+      expect(res.$redis).toBe("<hidden>");
+      expect(res.$serialise).toBe(wrapper.$serialise);
+      expect(res.$parse).toBe(wrapper.$parse);
+      expect(res.$deletedString).toBe(wrapper.$deletedString);
+      expect(res.$customInspection).toBe(wrapper.$customInspection);
+      expect(res.$ignoreUndefinedValues).toBe(wrapper.$ignoreUndefinedValues);
     });
 
     it("should return the regular Redite instance if disabled", () => {
@@ -129,7 +129,7 @@ describe("Extra coverage", () => {
 
       expect(db[custom]()).toBe(db);
 
-      db._redis.disconnect();
+      db.$redis.disconnect();
     });
   });
 });

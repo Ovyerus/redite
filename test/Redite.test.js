@@ -18,10 +18,10 @@ afterAll(async () => {
 describe("Redite", () => {
   describe("get trap", () => {
     it("should enable access to object properties", () => {
-      expect(wrapper._redis).toBeInstanceOf(Redis);
-      expect(wrapper._serialise).toBeInstanceOf(Function);
-      expect(wrapper._parse).toBeInstanceOf(Function);
-      expect(wrapper._deletedString).toEqual(expect.any(String));
+      expect(wrapper.$redis).toBeInstanceOf(Redis);
+      expect(wrapper.$serialise).toBeInstanceOf(Function);
+      expect(wrapper.$parse).toBeInstanceOf(Function);
+      expect(wrapper.$deletedString).toEqual(expect.any(String));
     });
 
     it("should throw an error for #set", () => {
