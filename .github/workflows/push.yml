@@ -12,8 +12,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
 
@@ -21,12 +22,12 @@ jobs:
       - run: yarn lint
 
       - name: Start Redis
-        uses: supercharge/redis-github-action@1.1.0
+        uses: supercharge/redis-github-action@1.2.0
         with:
           redis-version: ${{ matrix.redis }}
 
       - name: Test & publish coverage
-        uses: paambaati/codeclimate-action@v2.4.0
+        uses: paambaati/codeclimate-action@v3.0.0
         env:
           CC_TEST_REPORTER_ID: e5a1025a828b07fc2e20ab7d91679ac6d07283e3d3a7714019d0bfd9e4a8ac05
         with:
