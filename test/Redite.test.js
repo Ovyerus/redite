@@ -4,9 +4,9 @@ const Redis = require("ioredis");
 
 const Redite = require("../");
 
-const { db } = require("./lib/consts");
+const { redisUrl } = require("./lib/consts");
 
-const client = new Redis({ db });
+const client = new Redis(redisUrl);
 const wrapper = new Redite({ client });
 
 beforeEach(() => client.flushdb());
@@ -19,9 +19,9 @@ describe("Redite", () => {
   describe("get trap", () => {
     it("should enable access to object properties", () => {
       expect(wrapper._redis).toBeInstanceOf(Redis);
-      expect(wrapper._serialise).toBeFunction();
-      expect(wrapper._parse).toBeFunction();
-      expect(wrapper._deletedString).toBeString();
+      expect(wrapper._serialise).toBeInstanceOf(Function);
+      expect(wrapper._parse).toBeInstanceOf(Function);
+      expect(wrapper._deletedString).toEqual(expect.any(String));
     });
 
     it("should throw an error for #set", () => {
@@ -32,7 +32,7 @@ describe("Redite", () => {
 
     describe("#has", () => {
       it("should return a function", () => {
-        expect(wrapper.has).toBeFunction();
+        expect(wrapper.has).toBeInstanceOf(Function);
       });
 
       it("should check if a key exists", async () => {
@@ -44,7 +44,7 @@ describe("Redite", () => {
 
     describe("#delete", () => {
       it("should return a function", () => {
-        expect(wrapper.delete).toBeFunction();
+        expect(wrapper.delete).toBeInstanceOf(Function);
       });
 
       it("should delete a key", async () => {

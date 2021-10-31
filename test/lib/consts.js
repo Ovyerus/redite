@@ -1,4 +1,5 @@
-const db = 15;
+const redisUrl = process.env.REDITE_TEST_URL || "redis://localhost:6379/15";
+
 const TestVal = "test";
 const TestHash = { TestHash: TestVal };
 const TestList = [TestVal];
@@ -103,7 +104,7 @@ const NonMutatingTests = {
 };
 
 module.exports = {
-  db,
+  redisUrl,
   TestVal,
   TestHash,
   TestList,

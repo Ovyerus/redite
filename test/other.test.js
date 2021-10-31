@@ -8,9 +8,9 @@ const {
 
 const Redite = require("../");
 
-const { db, TestHash } = require("./lib/consts");
+const { redisUrl, TestHash } = require("./lib/consts");
 
-const client = new Redis({ db });
+const client = new Redis(redisUrl);
 const wrapper = new Redite({
   client,
   customInspection: true,
@@ -106,7 +106,7 @@ describe("Extra coverage", () => {
 
   describe("Custom inspection", () => {
     it("should be a function", () => {
-      expect(wrapper[custom]).toBeFunction();
+      expect(wrapper[custom]).toBeInstanceOf(Function);
     });
 
     it("should return a new class called `Redite`", () => {

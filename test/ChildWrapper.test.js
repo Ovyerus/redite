@@ -4,9 +4,15 @@ const Redis = require("ioredis");
 
 const Redite = require("../");
 
-const { db, TestVal, TestHash, TestList, DeepHash } = require("./lib/consts");
+const {
+  redisUrl,
+  TestVal,
+  TestHash,
+  TestList,
+  DeepHash,
+} = require("./lib/consts");
 
-const client = new Redis({ db });
+const client = new Redis(redisUrl);
 const wrapper = new Redite({ client });
 
 beforeEach(() => client.flushdb());
@@ -45,7 +51,7 @@ describe("ChildWrapper", () => {
 
     describe("Getting objects", () => {
       it("should be a function that returns a promise", () => {
-        expect(wrapper.foo.then).toBeFunction();
+        expect(wrapper.foo.then).toBeInstanceOf(Function);
         expect(wrapper.foo.then()).toBeInstanceOf(Promise);
       });
 
@@ -122,7 +128,7 @@ describe("ChildWrapper", () => {
 
     describe("#set", () => {
       it("should return a function", () => {
-        expect(wrapper.foo.set).toBeFunction();
+        expect(wrapper.foo.set).toBeInstanceOf(Function);
       });
 
       it("should set the value of the given key", async () => {
@@ -230,7 +236,7 @@ describe("ChildWrapper", () => {
 
     describe("#has", () => {
       it("should return a function", () => {
-        expect(wrapper.foo.has).toBeFunction();
+        expect(wrapper.foo.has).toBeInstanceOf(Function);
       });
 
       it("should check if the surface key exists in a hash", async () => {
@@ -272,7 +278,7 @@ describe("ChildWrapper", () => {
 
     describe("#delete", () => {
       it("should return a function", () => {
-        expect(wrapper.foo.delete).toBeFunction();
+        expect(wrapper.foo.delete).toBeInstanceOf(Function);
       });
 
       it("should delete a surface key in a hash", async () => {

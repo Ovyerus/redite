@@ -5,7 +5,7 @@ const Redis = require("ioredis");
 const Redite = require("../");
 
 const {
-  db,
+  redisUrl,
   TestVal,
   TestHash,
   TestList,
@@ -15,7 +15,7 @@ const {
   NonMutatingTests,
 } = require("./lib/consts");
 
-const client = new Redis({ db });
+const client = new Redis(redisUrl);
 const wrapper = new Redite({ client });
 
 beforeEach(() => client.flushdb());
