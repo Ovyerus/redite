@@ -1,24 +1,24 @@
-import { Redis } from 'ioredis';
+import { Redis } from "ioredis";
 
 type MutatingMethod =
-  | 'push'
-  | 'remove'
-  | 'removeIndex'
-  | 'pop'
-  | 'shift'
-  | 'unshift';
+  | "push"
+  | "remove"
+  | "removeIndex"
+  | "pop"
+  | "shift"
+  | "unshift";
 type NonMutatingMethod =
-  | 'concat'
-  | 'find'
-  | 'findIndex'
-  | 'includes'
-  | 'indexOf'
-  | 'lastIndexOf'
-  | 'map'
-  | 'length'
-  | 'filter'
-  | 'join'
-  | 'forEach';
+  | "concat"
+  | "find"
+  | "findIndex"
+  | "includes"
+  | "indexOf"
+  | "lastIndexOf"
+  | "map"
+  | "length"
+  | "filter"
+  | "join"
+  | "forEach";
 type SupportedArrayMethod = MutatingMethod | NonMutatingMethod;
 
 interface Constants {
@@ -98,12 +98,12 @@ declare namespace r {
   }
 
   export class Redite {
-    _redis: RedisClient;
-    _serialise: (value: any) => string;
-    _parse: (value: string) => any;
-    _deletedString: string;
-    _customInspection: boolean;
-    _ignoreUndefinedValues: boolean;
+    $redis: Redis;
+    $serialise: (value: any) => string;
+    $parse: (value: string) => any;
+    $deletedString: string;
+    $customInspection: boolean;
+    $ignoreUndefinedValues: boolean;
 
     constructor(options?: RediteOptions);
 

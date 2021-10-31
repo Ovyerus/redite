@@ -29,13 +29,13 @@ npm install redite
 ## Usage
 
 ```js
-const Redite = require('redite');
+const Redite = require("redite");
 const db = new Redite(); // If not passed a Redis connection to use, it'll make its own.
 // You can also pass a `url` parameter to the options object to connect using a Redis URL.
 
 await db.users.ovyerus.set({
-  id: '1',
-  email: 'Ovyerus@users.noreply.github.com'
+  id: "1",
+  email: "Ovyerus@users.noreply.github.com",
 });
 const me = await db.users.ovyerus;
 
@@ -46,18 +46,18 @@ console.log(me.email); // Ovyerus@users.noreply.github.com
 With a user-made Redis connection.
 
 ```js
-const Redis = require('ioredis');
-const Redite = require('redite');
+const Redis = require("ioredis");
+const Redite = require("redite");
 
 const client = new Redis();
 const db = new Redite({ client });
 
 await client.hset(
-  'users',
-  'ovyerus',
+  "users",
+  "ovyerus",
   JSON.stringify({
-    id: '1',
-    email: 'Ovyerus@users.noreply.github.com'
+    id: "1",
+    email: "Ovyerus@users.noreply.github.com",
   })
 );
 
@@ -76,12 +76,12 @@ console.log(me.email); // Ovyerus@users.noreply.github.com
 
 #### **Properties**
 
-| Name           | Type          | Description                                                       |
-| -------------- | ------------- | ----------------------------------------------------------------- |
-| \_redis        | ioredis.Redis | The Redis connection that gets piggybacked by the wrapper.        |
-| \_serialise    | Function      | Function used to serialise data for Redis.                        |
-| \_parse        | Function      | Function used to parse data from Redis.                           |
-| \_deleteString | String        | String used as a temporary placeholder when deleting list values. |
+| Name            | Type          | Description                                                       |
+| --------------- | ------------- | ----------------------------------------------------------------- |
+| \$redis         | ioredis.Redis | The Redis connection that gets piggybacked by the wrapper.        |
+| \$serialise     | Function      | Function used to serialise data for Redis.                        |
+| \$parse         | Function      | Function used to parse data from Redis.                           |
+| \$deletedString | String        | String used as a temporary placeholder when deleting list values. |
 
 #### **Constructor**
 
@@ -93,7 +93,7 @@ console.log(me.email); // Ovyerus@users.noreply.github.com
 | options.url                   | String        |                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.                |
 | options.serialise             | Function      | `JSON.stringify`         | Function that takes in a JS object and returns a string that can be sent to Redis.                            |
 | options.parse                 | Function      | `JSON.parse`             | Function that takes in a string and returns the JS object that it represents.                                 |
-| options.deleteString          | String        | `@__DELETED__@`          | String to use as a temporary placeholder when deleting root indexes in a list.                                |
+| options.deletedString         | String        | `@__DELETED__@`          | String to use as a temporary placeholder when deleting root indexes in a list.                                |
 | options.unref                 | Boolean       | `true`                   | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.             |
 | options.customInspection      | Boolean       | `false`                  | Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data. |
 | options.ignoreUndefinedValues | Boolean       | `false`                  | Whether to ignore `undefined` as a base value when setting values.                                            |
@@ -114,7 +114,7 @@ const db = new Redite();
 const result = await db.foo.bar.fizz.buzz;
 
 // Using regular promises.
-db.foo.bar.fizz.buzz.then(result => {});
+db.foo.bar.fizz.buzz.then((result) => {});
 ```
 
 This also works for arrays:
@@ -137,7 +137,7 @@ there will be that amount of `null`s before it)_
 Example:
 
 ```js
-await db.foo.bar.fizz.buzz.set('Magic');
+await db.foo.bar.fizz.buzz.set("Magic");
 const result = await Promise.all([db.foo.bar.fizz.buzz, db.foo.bar.fizz]);
 
 console.log(result); // ["Magic", {buzz: "Magic"}];
@@ -160,11 +160,11 @@ which is an alias for `.has`, which makes more sense when not passing a key to i
 ```js
 const db = new Redite();
 
-await db.foo.bar.fizz.buzz.set('Hello world!');
-const firstExists = await db.foo.has('bar');
+await db.foo.bar.fizz.buzz.set("Hello world!");
+const firstExists = await db.foo.has("bar");
 console.log(firstExists); // true
 
-await db.foo.bar.delete('fizz');
+await db.foo.bar.delete("fizz");
 const secondExists = await db.foo.bar.exists();
 console.log(secondExists); // false
 ```
@@ -174,12 +174,12 @@ console.log(secondExists); // false
 ```js
 const db = new Redite();
 
-await db.foo.set('Hello world!');
-const firstExists = db.has('foo');
+await db.foo.set("Hello world!");
+const firstExists = db.has("foo");
 console.log(firstExists); // true
 
-await db.delete('foo');
-const secondExists = await db.has('foo');
+await db.delete("foo");
+const secondExists = await db.has("foo");
 console.log(secondExists); // falses
 ```
 
