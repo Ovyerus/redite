@@ -87,16 +87,15 @@ console.log(me.email); // Ovyerus@users.noreply.github.com
 
 `new Redite([options])`
 
-| Name                          | Type          | Default                  | Description                                                                                                   |
-| ----------------------------- | ------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| options.client                | ioredis.Redis | `new Redis(options.url)` | The Redis connection to piggyback off of.                                                                     |
-| options.url                   | String        |                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.                |
-| options.serialise             | Function      | `JSON.stringify`         | Function that takes in a JS object and returns a string that can be sent to Redis.                            |
-| options.parse                 | Function      | `JSON.parse`             | Function that takes in a string and returns the JS object that it represents.                                 |
-| options.deletedString         | String        | `@__DELETED__@`          | String to use as a temporary placeholder when deleting root indexes in a list.                                |
-| options.unref                 | Boolean       | `true`                   | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle.             |
-| options.customInspection      | Boolean       | `false`                  | Whether to use a custom inspection for the Redis URL and Redis connection to hide potentially sensitive data. |
-| options.ignoreUndefinedValues | Boolean       | `false`                  | Whether to ignore `undefined` as a base value when setting values.                                            |
+| Name                          | Type          | Default                  | Description                                                                                       |
+| ----------------------------- | ------------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| options.client                | ioredis.Redis | `new Redis(options.url)` | The Redis connection to piggyback off of.                                                         |
+| options.url                   | String        |                          | The Redis URL to use for the automatically created connection. Not used if a client is passed.    |
+| options.serialise             | Function      | `JSON.stringify`         | Function that takes in a JS object and returns a string that can be sent to Redis.                |
+| options.parse                 | Function      | `JSON.parse`             | Function that takes in a string and returns the JS object that it represents.                     |
+| options.deletedString         | String        | `@__DELETED__@`          | String to use as a temporary placeholder when deleting root indexes in a list.                    |
+| options.unref                 | Boolean       | `true`                   | Whether to run `.unref` on the Redis client, which allows Node to exit if the connection is idle. |
+| options.ignoreUndefinedValues | Boolean       | `false`                  | Whether to ignore `undefined` as a base value when setting values.                                |
 
 #### **Accessing Objects**
 

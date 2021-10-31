@@ -2,10 +2,6 @@
 
 const Redis = require("ioredis");
 
-const {
-  inspect: { custom },
-} = require("util");
-
 const Redite = require("../");
 
 const { redisUrl, TestHash } = require("./lib/consts");
@@ -13,7 +9,6 @@ const { redisUrl, TestHash } = require("./lib/consts");
 const client = new Redis(redisUrl);
 const wrapper = new Redite({
   client,
-  customInspection: true,
   ignoreUndefinedValues: true,
 });
 
@@ -31,7 +26,6 @@ describe("Extra coverage", () => {
     expect(db.$serialise).toBe(JSON.stringify);
     expect(db.$parse).toBe(JSON.parse);
     expect(db.$deletedString).toBe("@__DELETED__@");
-    expect(db.$customInspection).toBe(false);
     expect(db.$ignoreUndefinedValues).toBe(false);
 
     db.$redis.disconnect();
@@ -101,35 +95,6 @@ describe("Extra coverage", () => {
           `Unable to apply method "map" to a non-array (${typeof TestHash})`
         )
       );
-    });
-  });
-
-  describe("Custom inspection", () => {
-    it("should be a function", () => {
-      expect(wrapper[custom]).toBeInstanceOf(Function);
-    });
-
-    it("should return a new class called `Redite`", () => {
-      expect(wrapper[custom]().constructor.name).toBe("Redite");
-    });
-
-    it('should have regular values, with `redis` set to "<hidden>"', () => {
-      const res = wrapper[custom]();
-
-      expect(res.$redis).toBe("<hidden>");
-      expect(res.$serialise).toBe(wrapper.$serialise);
-      expect(res.$parse).toBe(wrapper.$parse);
-      expect(res.$deletedString).toBe(wrapper.$deletedString);
-      expect(res.$customInspection).toBe(wrapper.$customInspection);
-      expect(res.$ignoreUndefinedValues).toBe(wrapper.$ignoreUndefinedValues);
-    });
-
-    it("should return the regular Redite instance if disabled", () => {
-      const db = new Redite();
-
-      expect(db[custom]()).toBe(db);
-
-      db.$redis.disconnect();
     });
   });
 });
