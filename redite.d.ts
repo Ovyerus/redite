@@ -33,7 +33,6 @@ interface RediteOptions {
   serialise?: (value: any) => string;
   parse?: (value: string) => any;
   deletedString?: string;
-  customInspection?: boolean;
   ignoreUndefinedValues?: boolean;
 }
 
@@ -102,7 +101,6 @@ declare namespace r {
     $serialise: (value: any) => string;
     $parse: (value: string) => any;
     $deletedString: string;
-    $customInspection: boolean;
     $ignoreUndefinedValues: boolean;
 
     constructor(options?: RediteOptions);

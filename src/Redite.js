@@ -1,7 +1,5 @@
 const Redis = require("ioredis");
 
-const util = require("util");
-
 const ChildWrapper = require("./ChildWrapper");
 const { NonMutatingMethods, SupportedArrayMethods } = require("./Constants");
 
@@ -27,7 +25,6 @@ function genTree(stack) {
  * @prop {Function} $parse Data parser function.
  * @prop {String} $deletedString Temporary string used when deleting items from a list.
  * @prop {Boolean} $ignoreUndefinedValues Whether to ignore `undefined` when setting values.
- * @prop {Boolean} $customInspection Whether to give a custom object for `util.inspect`.
  */
 class Redite {
   constructor(options = {}) {
@@ -36,7 +33,6 @@ class Redite {
     this.$parse = options.parse || JSON.parse;
     this.$deletedString = options.deletedString || "@__DELETED__@";
     this.$ignoreUndefinedValues = options.ignoreUndefinedValues || false;
-    this.$customInspection = options.customInspection || false;
 
     // (https://stackoverflow.com/a/40714458/8778928)
     // eslint-disable-next-line no-constructor-return
@@ -73,24 +69,6 @@ class Redite {
         throw new Error("Redite does not support deletion (delete foo.bar)");
       },
     });
-  }
-
-  [util.inspect.custom]() {
-    if (!this.$customInspection) return this;
-    else {
-      const scope = this;
-
-      return new (class Redite {
-        constructor() {
-          this.$redis = "<hidden>";
-          this.$serialise = scope.$serialise;
-          this.$parse = scope.$parse;
-          this.$deletedString = scope.$deletedString;
-          this.$customInspection = scope.$customInspection;
-          this.$ignoreUndefinedValues = scope.$ignoreUndefinedValues;
-        }
-      })();
-    }
   }
 
   /**
